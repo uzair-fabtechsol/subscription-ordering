@@ -14,11 +14,11 @@ export enum UserType {
 }
 
 export interface IUser extends Document {
+  firstName: string;
+  lastName?: string;
   email: string;
   password: string;
   userType: UserType;
-  firstName?: string;
-  lastName?: string;
   companyName?: string;
   phoneNumber?: string;
 }

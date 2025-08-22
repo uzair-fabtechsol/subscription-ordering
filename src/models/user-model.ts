@@ -18,7 +18,6 @@ const userSchema = new Schema<IUser>(
     },
     lastName: {
       type: String,
-      minlength: [2, "Last name must be at least 2 characters"],
       maxlength: [50, "Last name must be less than 50 characters"],
       trim: true,
     },
@@ -80,4 +79,4 @@ const userSchema = new Schema<IUser>(
   }
 );
 
-export const User = mongoose.model<IUser>("User", userSchema);
+export const UserModel = mongoose.model<IUser>("User", userSchema);
