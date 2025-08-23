@@ -84,72 +84,7 @@ export const signupSupplier = async (
 };
 
 // FUNCTION
-export const signinSupplier = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    // 1 : check the email and password
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return next(new AppError("email or password missing", 400));
-    }
-
-    // 2 : check wether the user exists against that email
-    const supplier = await UserModel.findOne({
-      email,
-    }).select("+password");
-
-    // 3 : compare the password
-    const passwordCorrect = supplier?.password
-      ? await bcrypt.compare(password, supplier?.password)
-      : false;
-
-    // 4 : check both supplier and passwords are correct or not
-    if (!supplier || !passwordCorrect) {
-      return next(new AppError("Wrong email or password", 401));
-    }
-
-    // 6 : sign a jwt, create a jwt
-    const jwtSecret: string = process.env.JWT_SECRET!;
-    const jwtExpiresIn: number =
-      Number(process.env.JWT_EXPIRES_IN) || 259200000;
-
-    const signOptions: SignOptions = {
-      expiresIn: jwtExpiresIn,
-    };
-
-    const token = jwt.sign(
-      { id: String(supplier._id) }, // always cast ObjectId to string
-      jwtSecret,
-      signOptions
-    );
-
-    // 7 : send the cookie
-    res.cookie("jwt", token, {
-      httpOnly: true, // prevents access from JavaScript (XSS protection)
-      secure: process.env.NODE_ENV === "production", // only sent over HTTPS in production
-      sameSite: "lax", // or "strict" / "none" depending on frontend/backend setup
-      path: "/",
-      maxAge: 3 * 24 * 60 * 60 * 1000, // in milliseconds
-    });
-
-    res.status(200).json({
-      status: "success",
-      data: {
-        supplier,
-        jwt: token,
-      },
-    });
-  } catch (err: unknown) {
-    return next(err);
-  }
-};
-
-// FUNCTION
-export const getCurrSupplier = async (
+export const getCurrSupplierOrCLient = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -177,12 +112,12 @@ export const getCurrSupplier = async (
     const decodedToken = jwt.verify(token, jwtSecret) as { id: string };
 
     // 3 : get the supplier based on id in token
-    const supplierId = decodedToken?.id;
+    const userId = decodedToken?.id;
 
     // 4 : get the user based on id
-    const supplier = await UserModel.findById(supplierId).select("-password");
+    const user = await UserModel.findById(userId).select("-password");
 
-    if (!supplier) {
+    if (!user) {
       return next(new AppError("Supplier does not exists", 401));
     }
 
@@ -191,7 +126,7 @@ export const getCurrSupplier = async (
       status: "success",
       message: "User fetched successfully",
       data: {
-        supplier,
+        user,
       },
     });
   } catch (err: unknown) {
@@ -200,6 +135,71 @@ export const getCurrSupplier = async (
 };
 
 // FUNCTION
+export const signinSupplierOrClient = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // 1 : check the email and password
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return next(new AppError("email or password missing", 400));
+    }
+
+    // 2 : check wether the user exists against that email
+    const user = await UserModel.findOne({
+      email,
+    }).select("+password");
+
+    // 3 : compare the password
+    const passwordCorrect = user?.password
+      ? await bcrypt.compare(password, user?.password)
+      : false;
+
+    // 4 : check both user and passwords are correct or not
+    if (!user || !passwordCorrect) {
+      return next(new AppError("Wrong email or password", 401));
+    }
+
+    // 6 : sign a jwt, create a jwt
+    const jwtSecret: string = process.env.JWT_SECRET!;
+    const jwtExpiresIn: number =
+      Number(process.env.JWT_EXPIRES_IN) || 259200000;
+
+    const signOptions: SignOptions = {
+      expiresIn: jwtExpiresIn,
+    };
+
+    const token = jwt.sign(
+      { id: String(user._id) }, // always cast ObjectId to string
+      jwtSecret,
+      signOptions
+    );
+
+    // 7 : send the cookie
+    res.cookie("jwt", token, {
+      httpOnly: true, // prevents access from JavaScript (XSS protection)
+      secure: process.env.NODE_ENV === "production", // only sent over HTTPS in production
+      sameSite: "lax", // or "strict" / "none" depending on frontend/backend setup
+      path: "/",
+      maxAge: 3 * 24 * 60 * 60 * 1000, // in milliseconds
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        user,
+        jwt: token,
+      },
+    });
+  } catch (err: unknown) {
+    return next(err);
+  }
+};
+
+// FUNCTION this function sends an otp to email
 export const signupClient = async (
   req: Request,
   res: Response,

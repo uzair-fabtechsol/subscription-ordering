@@ -2,6 +2,7 @@ import { OtpModel } from "@/models/otp-model";
 import { UserModel } from "@/models/user-model";
 import { AppError } from "@/utils/AppError";
 import { NextFunction, Request, Response } from "express";
+import jwt, { SignOptions } from "jsonwebtoken";
 
 export const verifyClientUsingOtp = async (
   req: Request,
@@ -40,15 +41,37 @@ export const verifyClientUsingOtp = async (
       userType: "client",
     });
 
-    // 8 : once the user is created the otp document should be deleted
+    // 8 : preparation for jwt
+    const jwtSecret: string = process.env.JWT_SECRET!;
+    const jwtExpiresIn: number =
+      Number(process.env.JWT_EXPIRES_IN) || 259200000;
+
+    const signOptions: SignOptions = {
+      expiresIn: jwtExpiresIn,
+    };
+
+    // 9 : sign token
+    const token = jwt.sign({ id: String(client._id) }, jwtSecret, signOptions);
+
+    // 10 : send the cookie
+    res.cookie("jwt", token, {
+      httpOnly: true, // prevents access from JavaScript (XSS protection)
+      secure: process.env.NODE_ENV === "production", // only sent over HTTPS in production
+      sameSite: "lax", // or "strict" / "none" depending on frontend/backend setup
+      path: "/",
+      maxAge: 3 * 24 * 60 * 60 * 1000, // in milliseconds
+    });
+
+    // 11 : once the user is created the otp document should be deleted
     await OtpModel.findByIdAndDelete(otpDoc?._id);
 
-    //  : return response
+    // 12 : return response
     return res.status(200).json({
       status: "success",
       message: "Supplier sign up success",
       data: {
         client,
+        jwt: token,
       },
     });
   } catch (err: unknown) {
