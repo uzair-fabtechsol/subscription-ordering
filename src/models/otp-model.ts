@@ -1,6 +1,7 @@
 import { IOtp } from "@/types/otp-types";
 import mongoose, { Schema } from "mongoose";
 import validator from "validator";
+import bcrypt from "bcrypt";
 
 const otpSchema = new Schema<IOtp>(
   {
@@ -56,7 +57,7 @@ const otpSchema = new Schema<IOtp>(
     },
     expiresAt: {
       type: Date,
-      default: () => new Date(Date.now() + 10 * 60 * 1000), // 10 minutes from now
+      default: () => new Date(Date.now() + 10 * 60 * 1000),
     },
   },
   {

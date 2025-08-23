@@ -10,8 +10,7 @@ import helmet from "helmet";
 import hpp from "hpp";
 import mongoSanitize from "mongo-sanitize";
 import { globalErrorHandler } from "./controllers/error-controller";
-import userRouter from "./routes/user-routes";
-import otpRouter from "./routes/otp-routes";
+import userRouter from "./routes/auth-routes";
 
 dotenv.config({ path: "./config.env" });
 
@@ -75,7 +74,6 @@ app.use((req, res, next) => {
 
 // rotes
 app.use("/v1/users", userRouter);
-app.use("/v1/otp", otpRouter);
 
 // Handle unknown routes (404)
 app.use((req: Request, res: Response) => {

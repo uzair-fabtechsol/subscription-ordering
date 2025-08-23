@@ -3,7 +3,8 @@ import {
   signinSupplierOrClient,
   signupClient,
   signupSupplier,
-} from "@/controllers/user-controller";
+  verifyClientUsingOtp,
+} from "@/controllers/auth-controller";
 import express, { Router } from "express";
 
 const router: Router = express.Router();
@@ -19,5 +20,6 @@ router.post("/supplier/signin", signinSupplierOrClient);
 router.post("/client/signup", signupClient);
 router.get("/client/curr", getCurrSupplierOrCLient);
 router.post("/client/signin", signinSupplierOrClient);
+router.post("/client/verify", verifyClientUsingOtp);
 
 export default router;
