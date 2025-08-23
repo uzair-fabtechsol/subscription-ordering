@@ -5,6 +5,7 @@ import { AppError } from "@/utils/AppError";
 import { generateOTP } from "@/utils/generate-otp";
 import { OtpModel } from "@/models/otp-model";
 import bcrypt from "bcrypt";
+import { sendMail } from "@/utils/email";
 
 // FUNCTION
 export const signupSupplier = async (
@@ -199,6 +200,12 @@ export const signupClient = async (
     // 3 : write logic to send an otp
     const otp = generateOTP();
 
+    const result = await sendMail(email, Number(otp));
+
+    if (!result?.success) {
+      throw new AppError("Sending otp to email failed", 500);
+    }
+
     // 5 : make a document in otp collection
     await OtpModel.create({
       firstName,
@@ -212,9 +219,6 @@ export const signupClient = async (
     return res.status(200).json({
       status: "success",
       message: "Otp successfully sent to your email",
-      data: {
-        otp,
-      },
     });
   } catch (err: unknown) {
     return next(err);
