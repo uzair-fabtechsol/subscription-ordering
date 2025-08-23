@@ -1,20 +1,15 @@
-import { IUser, UserType } from "@/types/user-types";
+import { IOtp } from "@/types/otp-types";
 import mongoose, { Schema } from "mongoose";
 import validator from "validator";
 
-const userSchema = new Schema<IUser>(
+const otpSchema = new Schema<IOtp>(
   {
     firstName: {
       type: String,
       minlength: [2, "First name must be at least 2 characters"],
       maxlength: [50, "First name must be less than 50 characters"],
       trim: true,
-      required: function () {
-        return (
-          this.userType === UserType.CLIENT ||
-          this.userType === UserType.SUPPLIER
-        );
-      },
+      required: true,
     },
     lastName: {
       type: String,
@@ -49,42 +44,24 @@ const userSchema = new Schema<IUser>(
         message:
           "Password must contain at least 1 lowercase, 1 uppercase, and 1 number",
       },
-      select: false,
     },
-    companyName: {
-      type: String,
-      minlength: [2, "Company name must be at least 2 characters"],
-      maxlength: [100, "Company name must be less than 100 characters"],
-      required: function () {
-        return this.userType === UserType.SUPPLIER;
-      },
-    },
-    phoneNumber: {
-      type: String,
-      required: function () {
-        return this.userType === UserType.SUPPLIER;
-      },
+    otp: {
+      type: Number,
+      default: null,
       validate: {
-        validator: (value: string) => validator.isMobilePhone(value),
-        message: "Please provide a valid phone number",
+        validator: (value: number | null) =>
+          value === null || /^[0-9]{4}$/.test(String(value)),
+        message: "OTP must be a 4-digit number",
       },
     },
-    userType: {
-      type: String,
-      enum: Object.values(UserType),
-      required: [true, "User type is required"],
+    expiresAt: {
+      type: Date,
+      default: () => new Date(Date.now() + 10 * 60 * 1000), // 10 minutes from now
     },
   },
   {
     timestamps: true,
-    toJSON: {
-      transform(doc, ret) {
-        delete (ret as any).password;
-        delete (ret as any).__v;
-        return ret;
-      },
-    },
   }
 );
 
-export const UserModel = mongoose.model<IUser>("User", userSchema);
+export const OtpModel = mongoose.model<IOtp>("Otp", otpSchema);

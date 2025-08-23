@@ -11,10 +11,11 @@ const router: Router = express.Router();
 // /api/v1/users
 
 // supplier auth routes
-router.post("/signup/supplier", signupSupplier);
-router.post("/signin/supplier", signinSupplier);
-router.get("/curr/supplier", getCurrSupplier);
+router.post("/supplier/signup", signupSupplier);
+router.post("/supplier/signin", signinSupplier);
+router.get("/supplier/curr", getCurrSupplier);
 
 // client auth routes
-router.post("/signup/client", signupClient);
+router.post("/client/signup", signupClient);
+
 export default router;

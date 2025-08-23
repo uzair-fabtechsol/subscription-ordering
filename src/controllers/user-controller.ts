@@ -3,6 +3,8 @@ import jwt, { SignOptions } from "jsonwebtoken";
 import { UserModel } from "@/models/user-model";
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "@/utils/AppError";
+import { generateOTP } from "@/utils/generate-otp";
+import { OtpModel } from "@/models/otp-model";
 
 // FUNCTION
 export const signupSupplier = async (
@@ -22,6 +24,7 @@ export const signupSupplier = async (
         400
       );
     }
+
     // 3 : hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -203,9 +206,40 @@ export const signupClient = async (
   next: NextFunction
 ) => {
   try {
+    // 1 : take the necessary data out
+    const { firstName, lastName, email, password } = req.body;
+
+    // 2 : check for missing required fields
+    if (!firstName || !email || !password) {
+      throw new AppError(
+        "Missing required field requiredFields=[firstName, email, password ]",
+        400
+      );
+    }
+
+    // 3 : write logic to send an otp
+    const otp = generateOTP();
+
+    // 4: hash the password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // 5 : make a document in otp collection
+    await OtpModel.create({
+      firstName,
+      lastName: lastName || "",
+      email,
+      password: hashedPassword,
+      otp,
+    });
+
+    // 6 : send the response
     return res.status(200).json({
       status: "success",
-      message: "Client sign up success",
+      message: "Otp successfully sent to your email",
+      data: {
+        otp,
+      },
     });
   } catch (err: unknown) {
     return next(err);
