@@ -195,3 +195,19 @@ export const getCurrSupplier = async (
     return next(err);
   }
 };
+
+// FUNCTION
+export const signupClient = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    return res.status(200).json({
+      status: "success",
+      message: "Client sign up success",
+    });
+  } catch (err: unknown) {
+    return next(err);
+  }
+};
