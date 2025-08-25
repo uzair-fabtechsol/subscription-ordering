@@ -11,6 +11,7 @@ import hpp from "hpp";
 import mongoSanitize from "mongo-sanitize";
 import { globalErrorHandler } from "./controllers/error-controller";
 import userRouter from "./routes/auth-routes";
+import { clearOtpCron } from "./cron/clear-otp-cron";
 
 dotenv.config({ path: "./config.env" });
 
@@ -71,6 +72,10 @@ app.use((req, res, next) => {
 
   next();
 });
+
+// cron jobs
+// Start cron jobs
+clearOtpCron();
 
 // rotes
 app.use("/api/v1/users", userRouter);
