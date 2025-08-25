@@ -1,25 +1,32 @@
 import {
+  checkAuthUserIsClient,
+  convertClientToSupplier,
   getCurrSupplierOrCLient,
   signinSupplierOrClient,
   signupClient,
   signupSupplier,
   verifyClientUsingOtp,
 } from "@/controllers/auth-controller";
-import express, { Router } from "express";
+import express, { RequestHandler, Router } from "express";
 
 const router: Router = express.Router();
 
 // /api/v1/users
 
-// supplier auth routes
+// supplier  routes
 router.post("/supplier/signup", signupSupplier);
 router.get("/supplier/curr", getCurrSupplierOrCLient);
 router.post("/supplier/signin", signinSupplierOrClient);
 
-// client auth routes
+// client  routes
 router.post("/client/signup", signupClient);
 router.get("/client/curr", getCurrSupplierOrCLient);
 router.post("/client/signin", signinSupplierOrClient);
 router.post("/client/verify", verifyClientUsingOtp);
+router.patch(
+  "/convert-client-to-supplier",
+  checkAuthUserIsClient as RequestHandler,
+  convertClientToSupplier as RequestHandler
+);
 
 export default router;

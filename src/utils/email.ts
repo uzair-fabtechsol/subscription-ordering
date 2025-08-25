@@ -11,7 +11,7 @@ export const sendMail = async (email: string, otp: number) => {
     });
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: process.env.MY_GMAIL,
       to: email,
       subject: "Your OTP Code",
       html: `

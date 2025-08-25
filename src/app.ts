@@ -73,7 +73,7 @@ app.use((req, res, next) => {
 });
 
 // rotes
-app.use("/v1/users", userRouter);
+app.use("/api/v1/users", userRouter);
 
 // Handle unknown routes (404)
 app.use((req: Request, res: Response) => {

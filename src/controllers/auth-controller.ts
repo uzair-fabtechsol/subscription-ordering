@@ -6,6 +6,12 @@ import { generateOTP } from "@/utils/generate-otp";
 import { OtpModel } from "@/models/otp-model";
 import bcrypt from "bcrypt";
 import { sendMail } from "@/utils/email";
+import { IUser } from "@/types/user-types";
+
+interface CustomRequest extends Request {
+  userType: string;
+  user: IUser;
+}
 
 // FUNCTION
 export const signupSupplier = async (
@@ -287,6 +293,80 @@ export const verifyClientUsingOtp = async (
       data: {
         client,
         jwt: token,
+      },
+    });
+  } catch (err: unknown) {
+    return next(err);
+  }
+};
+
+// FUNCTION
+export const checkAuthUserIsClient = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // 1 : take the toke out of headers
+    const { authorization } = req.headers;
+    const token = authorization?.startsWith("Bearer ")
+      ? authorization.split(" ")[1]
+      : null;
+
+    // 2 : return error is no token exists
+    if (!token) {
+      return next(
+        new AppError("Authorization token is missing or invalid", 401)
+      );
+    }
+
+    // 3 : now when jwt is confirmed that it exists decode/verify it using the secret in env file
+    const decodedToken = jwt.verify(
+      token,
+      process.env.JWT_SECRET ? process.env.JWT_SECRET : "this_is_wrong_secret"
+    ) as { id: string };
+
+    // 4 : take the id that is in token
+    const userId = decodedToken.id;
+
+    // 5 : take the user out of db based on that id
+    const client = await UserModel.findById(userId);
+
+    if (!client) {
+      return next(
+        new AppError(
+          "The user belonging to this token does not longer exists",
+          401
+        )
+      );
+    }
+
+    if (client.userType !== "client") {
+      return next(new AppError("You are not allowed to do this action", 401));
+    }
+
+    req.userType = "client" as string;
+    req.user = client as IUser;
+
+    next();
+  } catch (err: unknown) {
+    return next(err);
+  }
+};
+
+// FUNCTION
+export const convertClientToSupplier = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    res.status(200).json({
+      status: "success",
+      message: "Client to supplier conversion success",
+      data: {
+        userType: req.userType,
+        user: req.user,
       },
     });
   } catch (err: unknown) {
