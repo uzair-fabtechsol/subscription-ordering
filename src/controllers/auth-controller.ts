@@ -7,10 +7,11 @@ import { OtpModel } from "@/models/otp-model";
 import bcrypt from "bcrypt";
 import { sendMail } from "@/utils/email";
 import { IUser } from "@/types/user-types";
+import { Types } from "mongoose";
 
 interface CustomRequest extends Request {
   userType: string;
-  user: IUser;
+  user: IUser & { _id: Types.ObjectId };
 }
 
 // FUNCTION
@@ -301,58 +302,55 @@ export const verifyClientUsingOtp = async (
 };
 
 // FUNCTION
-export const checkAuthUserIsClient = async (
-  req: CustomRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    // 1 : take the toke out of headers
-    const { authorization } = req.headers;
-    const token = authorization?.startsWith("Bearer ")
-      ? authorization.split(" ")[1]
-      : null;
+export const checkAuthUser =
+  (allowedUserTypes: string[]) =>
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    try {
+      // 1 : take the token out of headers
+      const { authorization } = req.headers;
+      const token = authorization?.startsWith("Bearer ")
+        ? authorization.split(" ")[1]
+        : null;
 
-    // 2 : return error is no token exists
-    if (!token) {
-      return next(
-        new AppError("Authorization token is missing or invalid", 401)
-      );
+      // 2 : return error if no token exists
+      if (!token) {
+        return next(
+          new AppError("Authorization token is missing or invalid", 401)
+        );
+      }
+
+      // 3 : decode/verify token
+      const decodedToken = jwt.verify(
+        token,
+        process.env.JWT_SECRET ? process.env.JWT_SECRET : "this_is_wrong_secret"
+      ) as { id: string };
+
+      // 4 : get the user id from token
+      const userId = decodedToken.id;
+
+      // 5 : get user from DB
+      const user = await UserModel.findById(userId);
+
+      if (!user) {
+        return next(
+          new AppError("The user belonging to this token no longer exists", 401)
+        );
+      }
+
+      // 6 : check if user's type is in the allowed list
+      if (!allowedUserTypes.includes(user.userType)) {
+        return next(new AppError("You are not allowed to do this action", 403));
+      }
+
+      // 7 : attach user info to request
+      req.userType = user.userType as string;
+      req.user = user as IUser & { _id: Types.ObjectId };
+
+      next();
+    } catch (err: unknown) {
+      return next(err);
     }
-
-    // 3 : now when jwt is confirmed that it exists decode/verify it using the secret in env file
-    const decodedToken = jwt.verify(
-      token,
-      process.env.JWT_SECRET ? process.env.JWT_SECRET : "this_is_wrong_secret"
-    ) as { id: string };
-
-    // 4 : take the id that is in token
-    const userId = decodedToken.id;
-
-    // 5 : take the user out of db based on that id
-    const client = await UserModel.findById(userId);
-
-    if (!client) {
-      return next(
-        new AppError(
-          "The user belonging to this token does not longer exists",
-          401
-        )
-      );
-    }
-
-    if (client.userType !== "client") {
-      return next(new AppError("You are not allowed to do this action", 401));
-    }
-
-    req.userType = "client" as string;
-    req.user = client as IUser;
-
-    next();
-  } catch (err: unknown) {
-    return next(err);
-  }
-};
+  };
 
 // FUNCTION
 export const convertClientToSupplier = async (
@@ -361,12 +359,21 @@ export const convertClientToSupplier = async (
   next: NextFunction
 ) => {
   try {
+    const newSupplier = await UserModel.findByIdAndUpdate(
+      req.user?._id,
+      {
+        ...req.body,
+        userType: "supplier",
+        companyName: req.body.companyName,
+        phoneNumber: req.body.phoneNumber,
+      },
+      { new: true, returnDocument: "after", runValidators: true }
+    );
     res.status(200).json({
       status: "success",
       message: "Client to supplier conversion success",
       data: {
-        userType: req.userType,
-        user: req.user,
+        newSupplier,
       },
     });
   } catch (err: unknown) {

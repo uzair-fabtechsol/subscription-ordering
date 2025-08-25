@@ -1,5 +1,5 @@
 import {
-  checkAuthUserIsClient,
+  checkAuthUser,
   convertClientToSupplier,
   getCurrSupplierOrCLient,
   signinSupplierOrClient,
@@ -25,7 +25,7 @@ router.post("/client/signin", signinSupplierOrClient);
 router.post("/client/verify", verifyClientUsingOtp);
 router.patch(
   "/convert-client-to-supplier",
-  checkAuthUserIsClient as RequestHandler,
+  checkAuthUser(["client"]) as RequestHandler,
   convertClientToSupplier as RequestHandler
 );
 
