@@ -59,6 +59,16 @@ const otpSchema = new Schema<IOtp>(
       type: Date,
       default: () => new Date(Date.now() + 10 * 60 * 1000),
     },
+    companyName: {
+      type: String,
+    },
+    phoneNumber: {
+      type: String,
+      validate: {
+        validator: (value: string) => validator.isMobilePhone(value),
+        message: "Please provide a valid phone number",
+      },
+    },
   },
   {
     timestamps: true,

@@ -4,5 +4,7 @@ export interface IOtp {
   email: string;
   password: string;
   otp: number;
+  companyName?: string;
+  phoneNumber?: string;
   expiresAt: Date;
 }

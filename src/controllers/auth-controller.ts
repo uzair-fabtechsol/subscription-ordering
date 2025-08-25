@@ -15,6 +15,57 @@ interface CustomRequest extends Request {
 }
 
 // FUNCTION
+export const checkAuthUser =
+  (allowedUserTypes: string[]) =>
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    try {
+      // 1 : take the token out of headers
+      const { authorization } = req.headers;
+      const token = authorization?.startsWith("Bearer ")
+        ? authorization.split(" ")[1]
+        : null;
+
+      // 2 : return error if no token exists
+      if (!token) {
+        return next(
+          new AppError("Authorization token is missing or invalid", 401)
+        );
+      }
+
+      // 3 : decode/verify token
+      const decodedToken = jwt.verify(
+        token,
+        process.env.JWT_SECRET ? process.env.JWT_SECRET : "this_is_wrong_secret"
+      ) as { id: string };
+
+      // 4 : get the user id from token
+      const userId = decodedToken.id;
+
+      // 5 : get user from DB
+      const user = await UserModel.findById(userId);
+
+      if (!user) {
+        return next(
+          new AppError("The user belonging to this token no longer exists", 401)
+        );
+      }
+
+      // 6 : check if user's type is in the allowed list
+      if (!allowedUserTypes.includes(user.userType)) {
+        return next(new AppError("You are not allowed to do this action", 403));
+      }
+
+      // 7 : attach user info to request
+      req.userType = user.userType as string;
+      req.user = user as IUser & { _id: Types.ObjectId };
+
+      next();
+    } catch (err: unknown) {
+      return next(err);
+    }
+  };
+
+// FUNCTION
 export const signupSupplier = async (
   req: Request,
   res: Response,
@@ -25,23 +76,90 @@ export const signupSupplier = async (
     const { firstName, lastName, email, companyName, phoneNumber, password } =
       req.body;
 
-    // 3 : create supplier
-    const supplier = await UserModel.create({
+    // 2 : check for missing required fields
+    if (!firstName || !email || !password || !companyName || !phoneNumber) {
+      throw new AppError(
+        "Missing required field requiredFields=[firstName, email, password, companyName, phoneNumber ]",
+        400
+      );
+    }
+
+    // 3 : generate an opt
+    const otp = generateOTP();
+
+    // 4 : send the otp to email
+    const result = await sendMail(email, Number(otp));
+
+    // 5 : if email was not sent successfully throw an error
+    if (!result?.success) {
+      throw new AppError("Sending otp to email failed", 500);
+    }
+
+    // 5 : make a document in otp collection
+    await OtpModel.create({
       firstName,
       lastName: lastName || "",
       email,
+      password,
       companyName,
       phoneNumber,
-      password,
-      userType: "supplier",
+      otp,
     });
 
-    // 5 : check if the supplier is created
-    if (!supplier) {
-      return next(new AppError("Error in creating supplier", 500));
+    // 6 : send the response
+    return res.status(200).json({
+      status: "success",
+      message: "Otp successfully sent to your email",
+    });
+  } catch (err: unknown) {
+    return next(err);
+  }
+};
+
+// FUNCTION
+export const verifySupplierUsingOtp = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // 1 : take otp out of request body
+    let { otp } = req.body;
+
+    // 2 : check if otp exists
+    if (!otp) {
+      throw new AppError("Otp not provided", 400);
     }
 
-    // 5 : preparation for jwt
+    // 3 : convert the otp into number
+    otp = Number(otp);
+
+    // 4 : find the document against the concerned otp
+    const otpDoc = await OtpModel.findOne({ otp });
+
+    // 6 : check if otp is expired or invalid
+    if (!otpDoc || otpDoc.expiresAt < new Date()) {
+      await OtpModel.findByIdAndDelete(otpDoc?._id);
+      throw new AppError("OTP invalid or expired", 400);
+    }
+
+    // 7 : signup the client, create a document in user collection and send a jwt
+    const { firstName, lastName, email, password, companyName, phoneNumber } =
+      otpDoc;
+
+    let supplier = await UserModel.create({
+      firstName,
+      lastName: lastName || "",
+      email,
+      password,
+      userType: "supplier",
+      companyName,
+      phoneNumber,
+    });
+
+    supplier = supplier.toObject() as any;
+
+    // 8 : preparation for jwt
     const jwtSecret: string = process.env.JWT_SECRET!;
     const jwtExpiresIn: number =
       Number(process.env.JWT_EXPIRES_IN) || 259200000;
@@ -50,13 +168,17 @@ export const signupSupplier = async (
       expiresIn: jwtExpiresIn,
     };
 
-    // 5 : sign token
+    // 9 : sign token
     const token = jwt.sign(
       { id: String(supplier._id) },
       jwtSecret,
       signOptions
     );
 
+    // 1 : once the user is created the otp document should be deleted
+    await OtpModel.findByIdAndDelete(otpDoc?._id);
+
+    // 12 : return response
     return res.status(200).json({
       status: "success",
       message: "Supplier sign up success",
@@ -302,63 +424,21 @@ export const verifyClientUsingOtp = async (
 };
 
 // FUNCTION
-export const checkAuthUser =
-  (allowedUserTypes: string[]) =>
-  async (req: CustomRequest, res: Response, next: NextFunction) => {
-    try {
-      // 1 : take the token out of headers
-      const { authorization } = req.headers;
-      const token = authorization?.startsWith("Bearer ")
-        ? authorization.split(" ")[1]
-        : null;
-
-      // 2 : return error if no token exists
-      if (!token) {
-        return next(
-          new AppError("Authorization token is missing or invalid", 401)
-        );
-      }
-
-      // 3 : decode/verify token
-      const decodedToken = jwt.verify(
-        token,
-        process.env.JWT_SECRET ? process.env.JWT_SECRET : "this_is_wrong_secret"
-      ) as { id: string };
-
-      // 4 : get the user id from token
-      const userId = decodedToken.id;
-
-      // 5 : get user from DB
-      const user = await UserModel.findById(userId);
-
-      if (!user) {
-        return next(
-          new AppError("The user belonging to this token no longer exists", 401)
-        );
-      }
-
-      // 6 : check if user's type is in the allowed list
-      if (!allowedUserTypes.includes(user.userType)) {
-        return next(new AppError("You are not allowed to do this action", 403));
-      }
-
-      // 7 : attach user info to request
-      req.userType = user.userType as string;
-      req.user = user as IUser & { _id: Types.ObjectId };
-
-      next();
-    } catch (err: unknown) {
-      return next(err);
-    }
-  };
-
-// FUNCTION
 export const convertClientToSupplier = async (
   req: CustomRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
+    if (!req.body.companyName || !req.body.phoneNumber) {
+      return next(
+        new AppError(
+          "companyName and phoneNumber are required to convert client to supplier",
+          400
+        )
+      );
+    }
+
     const newSupplier = await UserModel.findByIdAndUpdate(
       req.user?._id,
       {

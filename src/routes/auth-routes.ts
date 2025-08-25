@@ -6,6 +6,7 @@ import {
   signupClient,
   signupSupplier,
   verifyClientUsingOtp,
+  verifySupplierUsingOtp,
 } from "@/controllers/auth-controller";
 import express, { RequestHandler, Router } from "express";
 
@@ -17,6 +18,7 @@ const router: Router = express.Router();
 router.post("/supplier/signup", signupSupplier);
 router.get("/supplier/curr", getCurrSupplierOrCLient);
 router.post("/supplier/signin", signinSupplierOrClient);
+router.post("/supplier/verify", verifySupplierUsingOtp);
 
 // client  routes
 router.post("/client/signup", signupClient);
