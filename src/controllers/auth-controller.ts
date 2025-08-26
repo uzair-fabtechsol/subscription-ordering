@@ -1,10 +1,10 @@
 import jwt, { SignOptions } from "jsonwebtoken";
+import bcrypt from "bcrypt";
 import { UserModel } from "@/models/auth-model";
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "@/utils/AppError";
 import { generateOTP } from "@/utils/generate-otp";
 import { OtpModel } from "@/models/otp-model";
-import bcrypt from "bcrypt";
 import { sendMail } from "@/utils/email";
 import { IUser } from "@/types/user-types";
 import { Types } from "mongoose";
