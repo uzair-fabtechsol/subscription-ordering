@@ -1,4 +1,4 @@
-import { IUser, UserType } from "@/types/user-types";
+import { IUser, UserType } from "@/types/auth-types";
 import mongoose, { Schema } from "mongoose";
 import validator from "validator";
 import bcrypt from "bcrypt";
@@ -26,7 +26,7 @@ const userSchema = new Schema<IUser>(
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
+
       minlength: [8, "Password must be at least 6 characters"],
       maxlength: [128, "Password must be less than 128 characters"],
     },
@@ -50,6 +50,17 @@ const userSchema = new Schema<IUser>(
       type: String,
       enum: Object.values(UserType),
       required: [true, "User type is required"],
+    },
+    googleId: {
+      type: String,
+      unique: true,
+    },
+    avatar: {
+      type: String,
+      validate: {
+        validator: (value: string) => !value || validator.isURL(value),
+        message: "Please provide a valid URL for the avatar",
+      },
     },
   },
   {

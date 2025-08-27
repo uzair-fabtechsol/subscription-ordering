@@ -21,4 +21,6 @@ export interface IUser extends Document {
   userType: UserType;
   companyName?: string;
   phoneNumber?: string;
+  googleId?: string;
+  avatar?: string;
 }

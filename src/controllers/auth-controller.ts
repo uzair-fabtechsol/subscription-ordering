@@ -6,7 +6,7 @@ import { AppError } from "@/utils/AppError";
 import { generateOTP } from "@/utils/generate-otp";
 import { OtpModel } from "@/models/otp-model";
 import { sendMail } from "@/utils/email";
-import { IUser } from "@/types/user-types";
+import { IUser } from "@/types/auth-types";
 import { Types } from "mongoose";
 
 interface CustomRequest extends Request {
@@ -454,6 +454,42 @@ export const convertClientToSupplier = async (
       message: "Client to supplier conversion success",
       data: {
         newSupplier,
+      },
+    });
+  } catch (err: unknown) {
+    return next(err);
+  }
+};
+
+// FUNCTION
+export const sendJwtGoogle = (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = req.user;
+
+    // create your own JWT
+    // 8 : preparation for jwt
+    const jwtSecret: string = process.env.JWT_SECRET!;
+    const jwtExpiresIn: number =
+      Number(process.env.JWT_EXPIRES_IN) || 259200000;
+
+    const signOptions: SignOptions = {
+      expiresIn: jwtExpiresIn,
+    };
+
+    // 9 : sign token
+    const token = jwt.sign({ id: String(user._id) }, jwtSecret, signOptions);
+
+    // send the user to your frontend
+    return res.status(200).json({
+      status: "success",
+      message: "Supplier sign up success",
+      data: {
+        user,
+        jwt: token,
       },
     });
   } catch (err: unknown) {

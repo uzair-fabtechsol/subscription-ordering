@@ -12,6 +12,7 @@ import mongoSanitize from "mongo-sanitize";
 import { globalErrorHandler } from "./controllers/error-controller";
 import userRouter from "./routes/auth-routes";
 import { clearOtpCron } from "./cron/clear-otp-cron";
+import passport from "./utils/passport";
 
 dotenv.config({ path: "./config.env" });
 
@@ -21,7 +22,7 @@ const app = express();
 app.use(helmet());
 
 // body parsing
-app.use(express.json({ limit: "10kb" }));
+// app.use(express.json({ limit: "10kb" }));
 
 // cookie parser
 app.use(cookieParser());
@@ -32,10 +33,12 @@ app.use(hpp({}));
 // setting cors
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.CLIENT_URL,
     credentials: true,
   })
 );
+
+app.use(passport.initialize());
 
 // logger in dev mode
 if (process.env.NODE_ENV === "development") {
@@ -45,12 +48,12 @@ if (process.env.NODE_ENV === "development") {
 app.set("trust proxy", true);
 
 // limiting request from same api
-const limiter = rateLimit({
-  max: 100,
-  windowMs: 30 * 60 * 1000,
-  message: "Too many requests.",
-});
-app.use(limiter);
+// const limiter = rateLimit({
+//   max: 100,
+//   windowMs: 30 * 60 * 1000,
+//   message: "Too many requests.",
+// });
+// app.use(limiter);
 
 // sanitizing against sql query injection
 app.use((req, res, next) => {
