@@ -1,5 +1,10 @@
 import passport from "passport";
-import { Strategy as GoogleStrategy, Profile } from "passport-google-oauth20";
+import {
+  Strategy as GoogleStrategy,
+  Profile,
+  VerifyCallback,
+} from "passport-google-oauth20";
+import { Request } from "express";
 import { UserModel } from "../models/auth-model";
 
 passport.use(
@@ -9,9 +14,19 @@ passport.use(
         "760122510836-kdohu4q6dreqpindfd513gcbbi3lfmfr.apps.googleusercontent.com",
       clientSecret: "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",
       callbackURL: `http://localhost:4000/api/v1/users/google/callback`,
+      passReqToCallback: true, // 👈 must be set if you want `req`
     },
-    async (_accessToken, _refreshToken, profile: Profile, done) => {
+    async (
+      req: Request,
+      _accessToken: string,
+      _refreshToken: string,
+      profile: Profile,
+      done: VerifyCallback
+    ) => {
       try {
+        // 1 : get the user type
+        const userType = (req.query.state as string) || "client";
+
         // try by googleId first
         let user = await UserModel.findOne({ googleId: profile.id });
 
@@ -27,7 +42,9 @@ passport.use(
             email,
             name: profile.displayName,
             avatar: profile.photos?.[0]?.value,
-            userType: "client",
+            userType, // 👈 now included
+            companyName: "Google Supplier",
+            phoneNumber: "0000000000",
           });
         } else if (!user.googleId) {
           // link googleId to existing email account
@@ -37,7 +54,7 @@ passport.use(
 
         return done(null, user);
       } catch (err) {
-        return done(err as any, undefined);
+        return done(err as Error, undefined);
       }
     }
   )

@@ -34,13 +34,16 @@ router.patch(
 );
 
 // google auth routes
-router.get(
-  "/google",
+router.get("/google", (req, res, next) => {
+  // stash userType temporarily in the state param
+  const userType = req.query.userType as string;
+
   passport.authenticate("google", {
     scope: ["profile", "email"],
     session: false,
-  })
-);
+    state: userType, // 👈 pass it through Google's OAuth "state"
+  })(req, res, next);
+});
 
 router.get(
   "/google/callback",

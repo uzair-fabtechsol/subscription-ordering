@@ -41,10 +41,6 @@ const userSchema = new Schema<IUser>(
       required: function () {
         return this.userType === UserType.SUPPLIER;
       },
-      validate: {
-        validator: (value: string) => validator.isMobilePhone(value),
-        message: "Please provide a valid phone number",
-      },
     },
     userType: {
       type: String,
@@ -57,10 +53,6 @@ const userSchema = new Schema<IUser>(
     },
     avatar: {
       type: String,
-      validate: {
-        validator: (value: string) => !value || validator.isURL(value),
-        message: "Please provide a valid URL for the avatar",
-      },
     },
   },
   {
