@@ -37,11 +37,18 @@ router.patch(
 router.get("/google", (req, res, next) => {
   // stash userType temporarily in the state param
   const userType = req.query.userType as string;
+  const companyName = req.query.companyName as string;
+  const phoneNumber = req.query.phoneNumber as string;
+
+  const state =
+    userType === "supplier"
+      ? `userType=supplier,companyName=${companyName},phoneNumber=${phoneNumber}`
+      : `userType=client`;
 
   passport.authenticate("google", {
     scope: ["profile", "email"],
     session: false,
-    state: userType, // 👈 pass it through Google's OAuth "state"
+    state,
   })(req, res, next);
 });
 

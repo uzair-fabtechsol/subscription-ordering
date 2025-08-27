@@ -6,13 +6,15 @@ import {
 } from "passport-google-oauth20";
 import { Request } from "express";
 import { UserModel } from "../models/auth-model";
+import dotenv from "dotenv";
+import path from "path";
+dotenv.config({ path: path.resolve(__dirname, "../../config.env") });
 
 passport.use(
   new GoogleStrategy(
     {
-      clientID:
-        "760122510836-kdohu4q6dreqpindfd513gcbbi3lfmfr.apps.googleusercontent.com",
-      clientSecret: "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",
+      clientID: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       callbackURL: `http://localhost:4000/api/v1/users/google/callback`,
       passReqToCallback: true, // 👈 must be set if you want `req`
     },
@@ -25,7 +27,8 @@ passport.use(
     ) => {
       try {
         // 1 : get the user type
-        const userType = (req.query.state as string) || "client";
+        const state = req.query.state as string;
+        const stateArr = state.split(",");
 
         // try by googleId first
         let user = await UserModel.findOne({ googleId: profile.id });
@@ -42,9 +45,16 @@ passport.use(
             email,
             name: profile.displayName,
             avatar: profile.photos?.[0]?.value,
-            userType, // 👈 now included
-            companyName: "Google Supplier",
-            phoneNumber: "0000000000",
+            companyName:
+              stateArr[0] === "userType=supplier"
+                ? stateArr[1].split("=")[1]
+                : "",
+            phoneNumber:
+              stateArr[0] === "userType=supplier"
+                ? stateArr[2].split("=")[1]
+                : "",
+            userType:
+              stateArr[0] === "userType=supplier" ? "supplier" : "client",
           });
         } else if (!user.googleId) {
           // link googleId to existing email account
