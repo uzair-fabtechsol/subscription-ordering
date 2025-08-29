@@ -22,7 +22,7 @@ const app = express();
 app.use(helmet());
 
 // body parsing
-// app.use(express.json({ limit: "10kb" }));
+app.use(express.json({ limit: "10kb" }));
 
 // cookie parser
 app.use(cookieParser());
@@ -45,15 +45,16 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-app.set("trust proxy", true);
-
 // limiting request from same api
-// const limiter = rateLimit({
-//   max: 100,
-//   windowMs: 30 * 60 * 1000,
-//   message: "Too many requests.",
-// });
-// app.use(limiter);
+const limiter = rateLimit({
+  max: 100,
+  windowMs: 30 * 60 * 1000,
+  message: "Too many requests.",
+  validate: { trustProxy: false },
+});
+app.use(limiter);
+
+app.set("trust proxy", true);
 
 // sanitizing against sql query injection
 app.use((req, res, next) => {
