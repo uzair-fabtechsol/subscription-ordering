@@ -5,10 +5,20 @@ export const clearOtpCron = () => {
   // Run every 10 minutes
   cron.schedule("*/10 * * * *", async () => {
     try {
-      const result = await OtpModel.deleteMany({});
-      console.log(`✅ OTPs cleared. Deleted ${result.deletedCount} documents`);
+      const now = new Date();
+
+      // Delete only expired OTPs
+      const result = await OtpModel.deleteMany({
+        expiresAt: { $lte: now },
+      });
+
+      console.log(
+        `✅ OTP cleanup complete. Deleted ${
+          result.deletedCount
+        } expired documents at ${now.toISOString()}`
+      );
     } catch (err) {
-      console.error("❌ Error clearing OTPs:", err);
+      console.error("❌ Error clearing expired OTPs:", err);
     }
   });
 };
