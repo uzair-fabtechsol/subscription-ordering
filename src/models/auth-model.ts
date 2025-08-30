@@ -49,6 +49,7 @@ const userSchema = new Schema<IUser>(
     },
     googleId: {
       type: String,
+      default: "",
     },
     avatar: {
       type: String,
@@ -60,6 +61,8 @@ const userSchema = new Schema<IUser>(
       transform(doc, ret) {
         delete (ret as any).password;
         delete (ret as any).__v;
+        delete (ret as any).googleId;
+
         return ret;
       },
     },

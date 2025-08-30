@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon"
+    "dev": "nodemon src/index.ts",
+    "build": "tsc && tsc-alias",
+    "start": "node dist/server.js",
+    "debug": "ts-node src/server.ts",
+    "prepare": "husky"
   },
   "author": "",
   "license": "ISC",
@@ -41,6 +45,7 @@
     "@types/passport": "^1.0.17",
     "@types/passport-google-oauth20": "^2.0.16",
     "@types/validator": "^13.15.2",
+    "husky": "^9.1.7",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
