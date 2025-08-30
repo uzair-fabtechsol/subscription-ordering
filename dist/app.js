@@ -46,7 +46,7 @@ const limiter = (0, express_rate_limit_1.default)({
 app.use(limiter);
 app.set("trust proxy", true);
 (0, clear_otp_cron_1.clearOtpCron)();
-app.use("/api/v1", index_1.default);
+app.use("/api", index_1.default);
 // Handle unknown routes (404)
 app.use((req, res) => {
     res.status(404).json({

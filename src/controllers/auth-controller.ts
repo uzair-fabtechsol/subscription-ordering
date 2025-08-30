@@ -73,8 +73,6 @@ export const signupSupplier = async (
   next: NextFunction
 ) => {
   try {
-    console.log("Hello---------------------------------");
-    console.log("request body----------------------------------------");
     console.log(req.body);
     // 1 : take the necessary data out
     const { firstName, lastName, email, companyName, phoneNumber, password } =
@@ -151,6 +149,7 @@ export const verifySupplierUsingOtp = async (
     const { firstName, lastName, email, password, companyName, phoneNumber } =
       otpDoc;
 
+
     let supplier = await UserModel.create({
       firstName,
       lastName: lastName || "",
@@ -160,6 +159,9 @@ export const verifySupplierUsingOtp = async (
       companyName,
       phoneNumber,
     });
+
+    console.log("supplier", supplier);
+
 
     supplier = supplier.toObject() as any;
 

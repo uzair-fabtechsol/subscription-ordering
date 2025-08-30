@@ -68,16 +68,18 @@ const otpSchema = new mongoose_1.Schema({
         required: [true, "Password is required"],
         minlength: [6, "Password must be at least 6 characters"],
         maxlength: [128, "Password must be less than 128 characters"],
-        validate: {
-            validator: (value) => validator_1.default.isStrongPassword(value, {
-                minLength: 6,
-                minLowercase: 1,
-                minUppercase: 1,
-                minNumbers: 1,
-                minSymbols: 0,
-            }),
-            message: "Password must contain at least 1 lowercase, 1 uppercase, and 1 number",
-        },
+        // validate: {
+        //   validator: (value: string) =>
+        //     validator.isStrongPassword(value, {
+        //       minLength: 6,
+        //       minLowercase: 1,
+        //       minUppercase: 1,
+        //       minNumbers: 1,
+        //       minSymbols: 0,
+        //     }),
+        //   message:
+        //     "Password must contain at least 1 lowercase, 1 uppercase, and 1 number",
+        // },
     },
     otp: {
         type: Number,

@@ -85,6 +85,7 @@ const userSchema = new mongoose_1.Schema({
     },
     googleId: {
         type: String,
+        default: "",
     },
     avatar: {
         type: String,
@@ -95,6 +96,7 @@ const userSchema = new mongoose_1.Schema({
         transform(doc, ret) {
             delete ret.password;
             delete ret.__v;
+            delete ret.googleId;
             return ret;
         },
     },

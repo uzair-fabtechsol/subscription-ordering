@@ -31,7 +31,7 @@ passport.use(
         const stateArr = state.split(",");
 
         // try by googleId first
-        let user = await UserModel.findOne({ googleId: profile.id });
+        let user = await UserModel.findOne({ googleId: profile.id }); 
 
         // fallback by email (avoid duplicate accounts)
         const email = profile.emails?.[0]?.value;

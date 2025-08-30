@@ -8,9 +8,9 @@
 // email, password
 
 export enum UserType {
-  CLIENT = "client",
-  SUPPLIER = "supplier",
-  ADMIN = "admin",
+  CLIENT = "client",//CL
+  SUPPLIER = "supplier",//SUP
+  ADMIN = "admin",//AD
 }
 
 export interface IUser extends Document {

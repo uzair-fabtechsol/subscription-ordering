@@ -51,8 +51,6 @@ exports.checkAuthUser = checkAuthUser;
 // FUNCTION
 const signupSupplier = async (req, res, next) => {
     try {
-        console.log("Hello---------------------------------");
-        console.log("request body----------------------------------------");
         console.log(req.body);
         // 1 : take the necessary data out
         const { firstName, lastName, email, companyName, phoneNumber, password } = req.body;
@@ -118,6 +116,7 @@ const verifySupplierUsingOtp = async (req, res, next) => {
             companyName,
             phoneNumber,
         });
+        console.log("supplier", supplier);
         supplier = supplier.toObject();
         // 8 : preparation for jwt
         const jwtSecret = process.env.JWT_SECRET;
