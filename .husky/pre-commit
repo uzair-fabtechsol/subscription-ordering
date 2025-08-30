@@ -1,14 +1,14 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
+# #!/bin/sh
+# . "$(dirname "$0")/_/husky.sh"
 
-BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+# BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
 
-if [ "$BRANCH_NAME" = "pre-main" ]; then
-  echo "On pre-main branch → running build..."
-  npm run build && git add dist
-else
-  echo "Not on pre-main branch → skipping build."
-fi
+# if [ "$BRANCH_NAME" = "pre-main" ]; then
+#   echo "On pre-main branch → running build..."
+#   npm run build && git add dist
+# else
+#   echo "Not on pre-main branch → skipping build."
+# fi
 
 
 # #!/bin/sh
