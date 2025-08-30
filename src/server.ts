@@ -1,56 +1,64 @@
 /* eslint-disable */
+import dotenv from "dotenv";
+import mongoose from "mongoose";
+import app from "./app";
 
-// Handle uncaught exception
+// Load environment variables
+dotenv.config();
+
+const DB_URI = process.env.DB_CONNECTION_STRING as string;
+const PORT = Number(process.env.PORT || 4000);
+
+/**
+ * Graceful shutdown helper
+ */
+function shutdown(server: import("http").Server, code: number, reason: string) {
+  console.error(`💥 Shutting down due to ${reason}`);
+  server.close(() => process.exit(code));
+}
+
+/**
+ * Global error handlers (before anything else)
+ */
 process.on("uncaughtException", (err: unknown) => {
-  console.log("Uncaught exception");
-
-  if (err instanceof Error) {
-    console.log(err);
-    console.log(err.name, err.message);
-  } else {
-    console.log(err);
-  }
-
+  console.error("❌ Uncaught Exception:", err instanceof Error ? err.stack : err);
   process.exit(1);
 });
 
-import app from "./app";
-import dotenv from "dotenv";
-import mongoose from "mongoose";
+process.on("unhandledRejection", (reason: unknown) => {
+  console.error("❌ Unhandled Promise Rejection:", reason);
+  process.exit(1);
+});
 
-dotenv.config();
-
+/**
+ * Database connection
+ */
 mongoose
-  .connect(process.env.DB_CONNECTION_STRING as string, {})
+  .connect(DB_URI)
   .then(() => {
-    console.log("Database connection successful");
+    console.log("✅ Database connection successful");
   })
   .catch((err) => {
-    console.error("Database connection error:", err);
+    console.error("❌ Database connection error:", err);
+    process.exit(1);
   });
 
+/**
+ * Start server (only if executed directly, not when imported by tests)
+ */
 if (require.main === module) {
-  const port = Number(process.env.PORT || 4000);
-  const server = app.listen(port, "localhost", () => {
-    console.log(`Server is listening on port ${port}`);
+  const server = app.listen(PORT, "0.0.0.0", () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
   });
 
-  // Handle unhandled rejections
-  process.on("unhandledRejection", (err: unknown) => {
-    console.log("Unhandled error rejections");
-
-    if (err instanceof Error) {
-      console.log(err);
-      console.log(err.name, err.message);
-    } else {
-      console.log(err);
-    }
-
-    server.close(() => {
-      process.exit(1);
-    });
-  });
+  // Graceful shutdown on signals (Docker/K8s friendly)
+  process.on("SIGTERM", () => shutdown(server, 0, "SIGTERM"));
+  process.on("SIGINT", () => shutdown(server, 0, "SIGINT"));
 }
 
-// Export app for Vercel or testing
+/**
+ * Export app for Vercel / serverless / testing
+ */
 export default app;
+
+

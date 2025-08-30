@@ -1,9 +1,9 @@
 "use strict";
-/* eslint-disable */
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+/* eslint-disable */
 const express_1 = __importDefault(require("express"));
 const morgan_1 = __importDefault(require("morgan"));
 const dotenv_1 = __importDefault(require("dotenv"));
@@ -15,9 +15,9 @@ const hpp_1 = __importDefault(require("hpp"));
 const error_controller_1 = require("./controllers/error-controller");
 const clear_otp_cron_1 = require("./cron/clear-otp-cron");
 const passport_1 = __importDefault(require("./utils/passport"));
+const index_1 = __importDefault(require("./routes/index")); // 👈 import central routes file
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-//test
 // http headers security
 app.use((0, helmet_1.default)());
 // body parsing
@@ -45,36 +45,8 @@ const limiter = (0, express_rate_limit_1.default)({
 });
 app.use(limiter);
 app.set("trust proxy", true);
-// sanitizing against sql query injection
-// app.use((req, res, next) => {
-//   if (req.body) {
-//     for (const key in req.body) {
-//       req.body[key] = mongoSanitize(req.body[key]);
-//     }
-//   }
-//   if (req.params) {
-//     for (const key in req.params) {
-//       req.params[key] = mongoSanitize(req.params[key]);
-//     }
-//   }
-//   if (req.query) {
-//     for (const key in req.query) {
-//       req.query[key] = mongoSanitize(req.query[key]);
-//     }
-//   }
-//   next();
-// });
-// cron jobs
-// Start cron jobs
 (0, clear_otp_cron_1.clearOtpCron)();
-// rotes
-app.use("/api/test", (req, res) => {
-    res.status(200).json({
-        status: "success",
-        message: "test server is working",
-    });
-});
-// app.use("/api/v1/users", userRouter);
+app.use("/api/v1", index_1.default);
 // Handle unknown routes (404)
 app.use((req, res) => {
     res.status(404).json({
