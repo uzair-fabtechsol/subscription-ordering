@@ -14,7 +14,8 @@ import userRouter from "./routes/auth-routes";
 import { clearOtpCron } from "./cron/clear-otp-cron";
 import passport from "./utils/passport";
 
-dotenv.config({ path: "./config.env" });
+dotenv.config();
+
 
 const app = express();
 
@@ -59,34 +60,44 @@ app.use(limiter);
 app.set("trust proxy", true);
 
 // sanitizing against sql query injection
-app.use((req, res, next) => {
-  if (req.body) {
-    for (const key in req.body) {
-      req.body[key] = mongoSanitize(req.body[key]);
-    }
-  }
+// app.use((req, res, next) => {
+//   if (req.body) {
+//     for (const key in req.body) {
+//       req.body[key] = mongoSanitize(req.body[key]);
+//     }
+//   }
 
-  if (req.params) {
-    for (const key in req.params) {
-      req.params[key] = mongoSanitize(req.params[key]);
-    }
-  }
+//   if (req.params) {
+//     for (const key in req.params) {
+//       req.params[key] = mongoSanitize(req.params[key]);
+//     }
+//   }
 
-  if (req.query) {
-    for (const key in req.query) {
-      req.query[key] = mongoSanitize(req.query[key]);
-    }
-  }
+//   if (req.query) {
+//     for (const key in req.query) {
+//       req.query[key] = mongoSanitize(req.query[key]);
+//     }
+//   }
 
-  next();
-});
+//   next();
+// });
 
 // cron jobs
 // Start cron jobs
+
 clearOtpCron();
 
 // rotes
-app.use("/api/v1/users", userRouter);
+
+app.use("/api/test", (req: Request, res: Response) => {
+  res.status(200).json({
+    status: "success",
+    message: "test server is working",
+  });
+});
+
+
+// app.use("/api/v1/users", userRouter);
 
 // Handle unknown routes (404)
 app.use((req: Request, res: Response) => {

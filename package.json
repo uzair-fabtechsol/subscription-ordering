@@ -3,11 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "dev": "nodemon",
-    "build": "tsc",
-    "prepare": "husky"
-  },
+ "scripts": {
+  "dev": "nodemon src/index.ts",       
+  "build": "tsc",                      
+  "start": "node dist/index.js",       
+  "debug": "ts-node src/index.ts",     
+  "prepare": "husky"
+},
   "author": "",
   "license": "ISC",
   "dependencies": {

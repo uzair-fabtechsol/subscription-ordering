@@ -19,7 +19,7 @@ process.on("uncaughtException", (err) => {
 const app_1 = __importDefault(require("./app"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const mongoose_1 = __importDefault(require("mongoose"));
-dotenv_1.default.config({ path: "./config.env" });
+dotenv_1.default.config();
 mongoose_1.default
     .connect(process.env.DB_CONNECTION_STRING, {})
     .then(() => {

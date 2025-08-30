@@ -12,12 +12,10 @@ const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const helmet_1 = __importDefault(require("helmet"));
 const hpp_1 = __importDefault(require("hpp"));
-const mongo_sanitize_1 = __importDefault(require("mongo-sanitize"));
 const error_controller_1 = require("./controllers/error-controller");
-const auth_routes_1 = __importDefault(require("./routes/auth-routes"));
 const clear_otp_cron_1 = require("./cron/clear-otp-cron");
 const passport_1 = __importDefault(require("./utils/passport"));
-dotenv_1.default.config({ path: "./config.env" });
+dotenv_1.default.config();
 const app = (0, express_1.default)();
 //test
 // http headers security
@@ -48,29 +46,35 @@ const limiter = (0, express_rate_limit_1.default)({
 app.use(limiter);
 app.set("trust proxy", true);
 // sanitizing against sql query injection
-app.use((req, res, next) => {
-    if (req.body) {
-        for (const key in req.body) {
-            req.body[key] = (0, mongo_sanitize_1.default)(req.body[key]);
-        }
-    }
-    if (req.params) {
-        for (const key in req.params) {
-            req.params[key] = (0, mongo_sanitize_1.default)(req.params[key]);
-        }
-    }
-    if (req.query) {
-        for (const key in req.query) {
-            req.query[key] = (0, mongo_sanitize_1.default)(req.query[key]);
-        }
-    }
-    next();
-});
+// app.use((req, res, next) => {
+//   if (req.body) {
+//     for (const key in req.body) {
+//       req.body[key] = mongoSanitize(req.body[key]);
+//     }
+//   }
+//   if (req.params) {
+//     for (const key in req.params) {
+//       req.params[key] = mongoSanitize(req.params[key]);
+//     }
+//   }
+//   if (req.query) {
+//     for (const key in req.query) {
+//       req.query[key] = mongoSanitize(req.query[key]);
+//     }
+//   }
+//   next();
+// });
 // cron jobs
 // Start cron jobs
 (0, clear_otp_cron_1.clearOtpCron)();
 // rotes
-app.use("/api/v1/users", auth_routes_1.default);
+app.use("/api/test", (req, res) => {
+    res.status(200).json({
+        status: "success",
+        message: "test server is working",
+    });
+});
+// app.use("/api/v1/users", userRouter);
 // Handle unknown routes (404)
 app.use((req, res) => {
     res.status(404).json({

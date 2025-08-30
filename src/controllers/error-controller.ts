@@ -3,6 +3,8 @@
 import { Request, Response } from "express";
 import { AppError } from "../utils/AppError";
 import { MongoServerError } from "mongodb";
+import dotenv from "dotenv";
+dotenv.config();
 
 export const globalErrorHandler = (err: unknown, req: Request, res: Response) => {
   const isDev = process.env.NODE_ENV === "development";

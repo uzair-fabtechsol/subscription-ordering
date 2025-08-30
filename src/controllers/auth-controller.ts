@@ -8,7 +8,8 @@ import { OtpModel } from "@/models/otp-model";
 import { sendMail } from "@/utils/email";
 import { IUser } from "@/types/auth-types";
 import { Types } from "mongoose";
-
+import dotenv from "dotenv";
+dotenv.config();
 interface CustomRequest extends Request {
   userType: string;
   user: IUser & { _id: Types.ObjectId };

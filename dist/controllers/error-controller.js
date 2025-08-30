@@ -1,9 +1,14 @@
 "use strict";
 /* eslint-disable */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.globalErrorHandler = void 0;
 const AppError_1 = require("../utils/AppError");
 const mongodb_1 = require("mongodb");
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const globalErrorHandler = (err, req, res) => {
     const isDev = process.env.NODE_ENV === "development";
     if (err instanceof AppError_1.AppError) {

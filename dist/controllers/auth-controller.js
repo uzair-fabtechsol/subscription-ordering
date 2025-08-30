@@ -11,6 +11,8 @@ const AppError_1 = require("@/utils/AppError");
 const generate_otp_1 = require("@/utils/generate-otp");
 const otp_model_1 = require("@/models/otp-model");
 const email_1 = require("@/utils/email");
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 // FUNCTION
 const checkAuthUser = (allowedUserTypes) => async (req, res, next) => {
     try {
