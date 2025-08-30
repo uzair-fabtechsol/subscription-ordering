@@ -58,7 +58,7 @@ app.set("trust proxy", true);
 clearOtpCron();
 
 app.use("/api", routes);
-
+//
 // Handle unknown routes (404)
 app.use((req: Request, res: Response) => {
   res.status(404).json({
