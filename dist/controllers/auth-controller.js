@@ -6,11 +6,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendJwtGoogle = exports.convertClientToSupplier = exports.verifyClientUsingOtp = exports.signupClient = exports.signinSupplierOrClient = exports.getCurrSupplierOrCLient = exports.verifySupplierUsingOtp = exports.signupSupplier = exports.checkAuthUser = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
-const auth_model_1 = require("@/models/auth-model");
-const AppError_1 = require("@/utils/AppError");
-const generate_otp_1 = require("@/utils/generate-otp");
-const otp_model_1 = require("@/models/otp-model");
-const email_1 = require("@/utils/email");
+const auth_model_1 = require("../models/auth-model");
+const AppError_1 = require("../utils/AppError");
+const generate_otp_1 = require("../utils/generate-otp");
+const otp_model_1 = require("../models/otp-model");
+const email_1 = require("../utils/email");
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 // FUNCTION

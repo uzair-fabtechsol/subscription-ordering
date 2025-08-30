@@ -37,7 +37,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserModel = void 0;
-const auth_types_1 = require("@/types/auth-types");
+const auth_types_1 = require("../types/auth-types");
 const mongoose_1 = __importStar(require("mongoose"));
 const validator_1 = __importDefault(require("validator"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
