@@ -14,6 +14,8 @@ import userRouter from "./routes/auth-routes";
 import { clearOtpCron } from "./cron/clear-otp-cron";
 import passport from "./utils/passport";
 
+// dummy commit
+
 dotenv.config({ path: "./config.env" });
 
 const app = express();
