@@ -15,6 +15,7 @@ import {
   getAllClients,
   getClientOnId,
   updateClientOnId,
+  deleteClientOnId,
 } from "@/controllers/auth-controller";
 import express, { RequestHandler, Router } from "express";
 import passport from "../utils/passport";
