@@ -6,65 +6,11 @@ import { AppError } from "@/utils/AppError";
 import { generateOTP } from "@/utils/generate-otp";
 import { OtpModel } from "@/models/otp-model";
 import { sendMail } from "@/utils/email";
-import { IUser, UserType } from "@/types/auth-types";
-import { Types } from "mongoose";
+import { UserType } from "@/types/auth-types";
+
 import dotenv from "dotenv";
+import { CustomRequest } from "@/types/modified-requests-types";
 dotenv.config();
-interface CustomRequest extends Request {
-  userType: string;
-  user: IUser & { _id: Types.ObjectId };
-}
-
-// FUNCTION
-export const restrictedTo =
-  (allowedUserTypes: string[]) =>
-  async (req: CustomRequest, res: Response, next: NextFunction) => {
-    try {
-      // 1 : take the token out of headers
-      const { authorization } = req.headers;
-      const token = authorization?.startsWith("Bearer ")
-        ? authorization.split(" ")[1]
-        : null;
-
-      // 2 : return error if no token exists
-      if (!token) {
-        return next(
-          new AppError("Authorization token is missing or invalid", 401)
-        );
-      }
-
-      // 3 : decode/verify token
-      const decodedToken = jwt.verify(
-        token,
-        process.env.JWT_SECRET ? process.env.JWT_SECRET : "this_is_wrong_secret"
-      ) as { id: string };
-
-      // 4 : get the user id from token
-      const userId = decodedToken.id;
-
-      // 5 : get user from DB
-      const user = await UserModel.findById(userId);
-
-      if (!user) {
-        return next(
-          new AppError("The user belonging to this token no longer exists", 401)
-        );
-      }
-
-      // 6 : check if user's type is in the allowed list
-      if (!allowedUserTypes.includes(user.userType)) {
-        return next(new AppError("You are not allowed to do this action", 403));
-      }
-
-      // 7 : attach user info to request
-      req.userType = user.userType as string;
-      req.user = user as IUser & { _id: Types.ObjectId };
-
-      next();
-    } catch (err: unknown) {
-      return next(err);
-    }
-  };
 
 // DIVIDER Supplier functions
 

@@ -1,6 +1,5 @@
 import {
   adminSignin,
-  restrictedTo,
   convertClientToSupplier,
   getCurrSupplierOrCLient,
   sendJwtGoogle,
@@ -16,6 +15,7 @@ import {
 } from "@/controllers/auth-controller";
 import express, { RequestHandler, Router } from "express";
 import passport from "../utils/passport";
+import { restrictedTo } from "@/middlewares/restricted-to";
 
 const router: Router = express.Router();
 
@@ -34,7 +34,7 @@ router.post("/client/signin", signinSupplierOrClient);
 router.post("/client/verify", verifyClientUsingOtp);
 router.patch(
   "/convert-client-to-supplier",
-  restrictedTo(["client"]) as RequestHandler,
+  restrictedTo(["client"]) as unknown as RequestHandler,
   convertClientToSupplier as RequestHandler
 );
 
@@ -43,31 +43,31 @@ router.post("/admin/signin", adminSignin);
 
 router.get(
   "/suppliers",
-  restrictedTo(["admin"]) as RequestHandler,
+  restrictedTo(["admin"]) as unknown as RequestHandler,
   getAllSuppliers as RequestHandler
 );
 
 router.get(
   "/suppliers/:id",
-  restrictedTo(["admin"]) as RequestHandler,
+  restrictedTo(["admin"]) as unknown as RequestHandler,
   getSupplierOnId as RequestHandler
 );
 
 router.get(
   "/suppliers/:id",
-  restrictedTo(["admin"]) as RequestHandler,
+  restrictedTo(["admin"]) as unknown as RequestHandler,
   getSupplierOnId as RequestHandler
 );
 
 router.patch(
   "/suppliers/:id",
-  restrictedTo(["admin"]) as RequestHandler,
+  restrictedTo(["admin"]) as unknown as RequestHandler,
   updateSupplierOnId as RequestHandler
 );
 
 router.delete(
   "/suppliers/:id",
-  restrictedTo(["admin"]) as RequestHandler,
+  restrictedTo(["admin"]) as unknown as RequestHandler,
   deleteSupplierOnId as RequestHandler
 );
 
