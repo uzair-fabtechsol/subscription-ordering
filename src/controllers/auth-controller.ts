@@ -10,6 +10,7 @@ import { UserType } from "@/types/auth-types";
 
 import dotenv from "dotenv";
 import { CustomRequest } from "@/types/modified-requests-types";
+import { IResponseObject } from "@/types/response-object-types";
 dotenv.config();
 
 // DIVIDER Supplier functions
@@ -57,10 +58,11 @@ export const signupSupplier = async (
     });
 
     // 6 : send the response
-    return res.status(200).json({
+    const responseObject: IResponseObject = {
       status: "success",
       message: "Otp successfully sent to your email",
-    });
+    };
+    return res.status(200).json(responseObject);
   } catch (err: unknown) {
     return next(err);
   }
@@ -134,14 +136,16 @@ export const verifySupplierUsingOtp = async (
     await OtpModel.findByIdAndDelete(otpDoc?._id);
 
     // 12 : return response
-    return res.status(200).json({
+
+    const responseObject: IResponseObject = {
       status: "success",
       message: "Supplier sign up success",
       data: {
         supplier,
         jwt: token,
       },
-    });
+    };
+    return res.status(200).json(responseObject);
   } catch (err: unknown) {
     return next(err);
   }
@@ -186,10 +190,11 @@ export const signupClient = async (
     });
 
     // 6 : send the response
-    return res.status(200).json({
+    const responseObject: IResponseObject = {
       status: "success",
       message: "Otp successfully sent to your email",
-    });
+    };
+    return res.status(200).json(responseObject);
   } catch (err: unknown) {
     return next(err);
   }
@@ -254,14 +259,15 @@ export const verifyClientUsingOtp = async (
     await OtpModel.findByIdAndDelete(otpDoc?._id);
 
     // 12 : return response
-    return res.status(200).json({
+    const responseObject: IResponseObject = {
       status: "success",
       message: "Supplier sign up success",
       data: {
         client,
         jwt: token,
       },
-    });
+    };
+    return res.status(200).json(responseObject);
   } catch (err: unknown) {
     return next(err);
   }
@@ -313,14 +319,15 @@ export const adminSignin = async (
     });
 
     // send the user to your frontend
-    return res.status(200).json({
+    const responseObject: IResponseObject = {
       status: "success",
       message: "Admin sign up success",
       data: {
         admin,
         jwt: token,
       },
-    });
+    };
+    return res.status(200).json(responseObject);
   } catch (err: unknown) {
     return next(err);
   }
@@ -394,7 +401,7 @@ export const getAllSuppliers = async (
     const hasNextPage = page < totalPages;
     const hasPrevPage = page > 1;
 
-    return res.status(200).json({
+    const responseObject: IResponseObject = {
       status: "success",
       message: "Fetching all suppliers success",
       data: {
@@ -408,7 +415,9 @@ export const getAllSuppliers = async (
           hasPrevPage,
         },
       },
-    });
+    };
+
+    return res.status(200).json(responseObject);
   } catch (err: unknown) {
     return next(err);
   }
@@ -429,13 +438,15 @@ export const getSupplierOnId = async (
       userType: UserType.SUPPLIER,
     });
 
-    return res.status(200).json({
+    const responseObject: IResponseObject = {
       status: "success",
       message: "Fetching supplier on id success",
       data: {
         supplier,
       },
-    });
+    };
+
+    return res.status(200).json(responseObject);
   } catch (err: unknown) {
     return next(err);
   }
@@ -464,13 +475,14 @@ if(!id){
       }
     );
 
-    return res.status(200).json({
+    const responseObject: IResponseObject = {
       status: "success",
       message: "Deleting supplier on id success",
       data: {
         updatedSupplier,
       },
-    });
+    };
+    return res.status(200).json(responseObject);
   } catch (err: unknown) {
     return next(err);
   }
@@ -488,10 +500,11 @@ export const deleteSupplierOnId = async (
   }
     await UserModel.findOneAndDelete({ _id: id, userType: UserType.SUPPLIER });
 
-    return res.status(200).json({
+    const responseObject: IResponseObject = {
       status: "success",
       message: "Deleting supplier on id success",
-    });
+    };
+    return res.status(200).json(responseObject);
   } catch (err: unknown) {
     return next(err);
   }
@@ -522,14 +535,15 @@ export const sendJwtGoogle = (
     const token = jwt.sign({ id: String(user._id) }, jwtSecret, signOptions);
 
     // send the user to your frontend
-    return res.status(200).json({
+    const responseObject: IResponseObject = {
       status: "success",
       message: "Supplier sign up success",
       data: {
         user,
         jwt: token,
       },
-    });
+    };
+    return res.status(200).json(responseObject);
   } catch (err: unknown) {
     return next(err);
   }
@@ -576,13 +590,14 @@ export const getCurrSupplierOrCLient = async (
     }
 
     //  : send response
-    return res.status(200).json({
+    const responseObject: IResponseObject = {
       status: "success",
       message: "User fetched successfully",
       data: {
         user,
       },
-    });
+    };
+    return res.status(200).json(responseObject);
   } catch (err: unknown) {
     return next(err);
   }
@@ -641,13 +656,16 @@ export const signinSupplierOrClient = async (
       maxAge: 3 * 24 * 60 * 60 * 1000, // in milliseconds
     });
 
-    res.status(200).json({
+    const responseObject: IResponseObject = {
       status: "success",
+      message: "Sign in successful",
       data: {
         user,
         jwt: token,
       },
-    });
+    };
+
+    res.status(200).json(responseObject);
   } catch (err: unknown) {
     return next(err);
   }
@@ -679,13 +697,15 @@ export const convertClientToSupplier = async (
       },
       { new: true, returnDocument: "after", runValidators: true }
     );
-    res.status(200).json({
+
+    const responseObject: IResponseObject = {
       status: "success",
       message: "Client to supplier conversion success",
       data: {
         newSupplier,
       },
-    });
+    };
+    res.status(200).json(responseObject);
   } catch (err: unknown) {
     return next(err);
   }
