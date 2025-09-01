@@ -1,7 +1,6 @@
-import { IUser, UserType } from "@/types/auth-types";
+import { IUser, UserStatus, UserType } from "@/types/auth-types";
 import mongoose, { Schema } from "mongoose";
 import validator from "validator";
-import bcrypt from "bcrypt";
 
 const userSchema = new Schema<IUser>(
   {
@@ -26,7 +25,6 @@ const userSchema = new Schema<IUser>(
     },
     password: {
       type: String,
-
       minlength: [8, "Password must be at least 6 characters"],
       maxlength: [128, "Password must be less than 128 characters"],
     },
@@ -54,6 +52,12 @@ const userSchema = new Schema<IUser>(
     avatar: {
       type: String,
     },
+    status: {
+      type: String,
+      enum: Object.values(UserStatus),
+      required: [true, "User status is required"],
+      default: UserStatus.ACTIVE,
+    },
   },
   {
     timestamps: true,
@@ -68,15 +72,5 @@ const userSchema = new Schema<IUser>(
     },
   }
 );
-
-userSchema.pre("save", async function (next) {
-  // Only hash if password is modified (important for updates!)
-  if (!this.isModified("password")) return next();
-
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-
-  next();
-});
 
 export const UserModel = mongoose.model<IUser>("User", userSchema);

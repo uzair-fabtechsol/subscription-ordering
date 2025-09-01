@@ -8,19 +8,25 @@
 // email, password
 
 export enum UserType {
-  CLIENT = "client",//CL
-  SUPPLIER = "supplier",//SUP
-  ADMIN = "admin",//AD
+  CLIENT = "client", //CL
+  SUPPLIER = "supplier", //SUP
+  ADMIN = "admin", //AD
+}
+
+export enum UserStatus {
+  ACTIVE = "active",
+  INACTIVE = "in-active",
 }
 
 export interface IUser extends Document {
   firstName: string;
   lastName?: string;
   email: string;
-  password: string;
+  password?: string;
   userType: UserType;
   companyName?: string;
   phoneNumber?: string;
   googleId?: string;
   avatar?: string;
+  status: UserStatus;
 }
