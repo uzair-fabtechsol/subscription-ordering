@@ -332,7 +332,36 @@ export const getAllSuppliers = async (
   next: NextFunction
 ) => {
   try {
-    const suppliers = await UserModel.find({ userType: "supplier" });
+    // 1 : prepare the query object from query params
+    let queryObj = { ...req.query };
+
+    // 2 : exclude the fields from query object we will handle them separately
+    const excludedFields = ["page", "sort", "limit", "fields"];
+    excludedFields.forEach((val) => delete queryObj[val]);
+
+    // 3 : we need only suppliers so add the userType to query
+    queryObj = { ...queryObj, userType: "supplier" };
+
+    // 4 : prepare the query
+    let query = UserModel.find(queryObj);
+
+    // 5 : add pagination
+    const page = req?.query?.page ? Number(req.query?.page) : 1;
+    const limit = req?.query?.limit ? Number(req.query?.limit) : 10;
+    const skip = (page - 1) * limit;
+
+    query = query.skip(skip).limit(limit);
+
+    if (req.query?.page) {
+      const numSuppliers = await UserModel.countDocuments();
+
+      if (skip >= numSuppliers) {
+        throw new AppError("This page don't exists", 404);
+      }
+    }
+
+    // 6 : execute the query
+    const suppliers = await query;
 
     return res.status(200).json({
       status: "success",
