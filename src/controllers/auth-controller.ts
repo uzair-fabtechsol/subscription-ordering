@@ -11,6 +11,7 @@ import { UserType } from "@/types/auth-types";
 import dotenv from "dotenv";
 import { CustomRequest } from "@/types/modified-requests-types";
 import { IResponseObject } from "@/types/response-object-types";
+import mongoose from "mongoose";
 dotenv.config();
 
 // DIVIDER Supplier functions
@@ -352,49 +353,75 @@ export const getAllSuppliers = async (
     // 4: Handle search functionality on firstName
     if (req.query?.search) {
       const searchTerm = req.query.search as string;
-      // Add case-insensitive search on firstName using regex
-      queryObj.firstName = {
-        $regex: searchTerm,
-        $options: "i", // case-insensitive
-      };
+      if (searchTerm.trim().length > 0) {
+        queryObj.firstName = {
+          $regex: searchTerm,
+          $options: "i", // case-insensitive
+        };
+      }
     }
 
-    // 5: Create the base query with filters and search (this searches the whole DB)
+    // 5: Create the base query with filters and search
     let query = UserModel.find(queryObj);
 
-    // 6: Handle sorting if specified
+    // 6: Handle sorting
     if (req.query?.sort) {
       const sortBy = (req.query.sort as string).split(",").join(" ");
       query = query.sort(sortBy);
     } else {
-      // Default sort by creation date (newest first)
-      query = query.sort("-createdAt");
+      query = query.sort("-createdAt"); // Default sort
     }
 
-    // 7: Handle field selection if specified
+    // 7: Handle field selection
     if (req.query?.fields) {
       const fields = (req.query.fields as string).split(",").join(" ");
       query = query.select(fields);
     }
 
-    // 8: Get total count of filtered/searched suppliers (for pagination metadata)
+    // 8: Get total count
     const totalResults = await UserModel.countDocuments(queryObj);
 
-    // 9: Apply pagination
+    // 9: Pagination params (with validation)
     const page = req?.query?.page ? Number(req.query?.page) : 1;
     const limit = req?.query?.limit ? Number(req.query?.limit) : 10;
+
+    if (isNaN(page) || page <= 0) {
+      throw new AppError(
+        "Invalid 'page' value, must be a positive number",
+        400
+      );
+    }
+    if (isNaN(limit) || limit <= 0) {
+      throw new AppError(
+        "Invalid 'limit' value, must be a positive number",
+        400
+      );
+    }
+
     const skip = (page - 1) * limit;
 
-    // 10: Validate page exists (only if page is specified)
-    if (req.query?.page && skip >= totalResults) {
+    // 10: Validate page exists
+    if (req.query?.page && skip >= totalResults && totalResults > 0) {
       throw new AppError("This page doesn't exist", 404);
     }
 
-    // 11: Apply pagination to the query
+    // 11: Apply pagination
     query = query.skip(skip).limit(limit);
 
-    // 12: Execute the query
+    // 12: Execute query
     const suppliers = await query;
+
+    // 13: Handle no suppliers found
+    if (!suppliers || suppliers.length === 0) {
+      return res.status(200).json({
+        status: "success",
+        message: "No suppliers found matching criteria",
+        data: {
+          suppliers: [],
+          totalResults: 0,
+        },
+      });
+    }
 
     const responseObject: IResponseObject = {
       status: "success",
@@ -402,6 +429,11 @@ export const getAllSuppliers = async (
       data: {
         suppliers,
         totalResults,
+        pagination: {
+          currentPage: page,
+          limit,
+          totalPages: Math.ceil(totalResults / limit),
+        },
       },
     };
 
@@ -423,17 +455,23 @@ export const getSupplierOnId = async (
       throw new AppError("Id is missing", 400);
     }
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new AppError("Invalid id format", 400);
+    }
+
     const supplier = await UserModel.findOne({
       _id: id,
       userType: UserType.SUPPLIER,
     });
 
+    if (!supplier) {
+      throw new AppError("Supplier not found", 404);
+    }
+
     const responseObject: IResponseObject = {
       status: "success",
       message: "Fetching supplier on id success",
-      data: {
-        supplier,
-      },
+      data: { supplier },
     };
 
     return res.status(200).json(responseObject);
@@ -454,9 +492,15 @@ export const updateSupplierOnId = async (
       throw new AppError("Id is missing", 400);
     }
 
-    const updates = {
-      status: req.body.status,
-    };
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new AppError("Invalid supplier id format", 400);
+    }
+
+    if (!req.body.status) {
+      throw new AppError("Status field is required", 400);
+    }
+
+    const updates = { status: req.body.status };
 
     const updatedSupplier = await UserModel.findOneAndUpdate(
       { _id: id, userType: UserType.SUPPLIER },
@@ -467,13 +511,16 @@ export const updateSupplierOnId = async (
       }
     );
 
+    if (!updatedSupplier) {
+      throw new AppError("Supplier not found", 404);
+    }
+
     const responseObject: IResponseObject = {
       status: "success",
       message: "Updating supplier on id success",
-      data: {
-        updatedSupplier,
-      },
+      data: { updatedSupplier },
     };
+
     return res.status(200).json(responseObject);
   } catch (err: unknown) {
     return next(err);
@@ -492,12 +539,24 @@ export const deleteSupplierOnId = async (
       throw new AppError("Id is missing", 400);
     }
 
-    await UserModel.findOneAndDelete({ _id: id, userType: UserType.SUPPLIER });
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new AppError("Invalid supplier id format", 400);
+    }
+
+    const deletedSupplier = await UserModel.findOneAndDelete({
+      _id: id,
+      userType: UserType.SUPPLIER,
+    });
+
+    if (!deletedSupplier) {
+      throw new AppError("Supplier not found", 404);
+    }
 
     const responseObject: IResponseObject = {
       status: "success",
       message: "Deleting supplier on id success",
     };
+
     return res.status(200).json(responseObject);
   } catch (err: unknown) {
     return next(err);
@@ -511,29 +570,33 @@ export const getAllClients = async (
 ) => {
   try {
     // 1: Prepare the base query object from query params
-    console.log("test 565");
     let queryObj = { ...req.query };
 
     // 2: Exclude pagination, search and other special fields
     const excludedFields = ["page", "sort", "limit", "fields", "search"];
     excludedFields.forEach((val) => delete queryObj[val]);
 
-    // 3: Always include userType as supplier in the base query
+    // 3: Always include userType as client in the base query
     queryObj = { ...queryObj, userType: "client" };
-    console.log("test 566", queryObj);
 
     // 4: Handle search functionality on firstName
     if (req.query?.search) {
       const searchTerm = req.query.search as string;
-      // Add case-insensitive search on firstName using regex
+
+      if (searchTerm.trim().length < 2) {
+        throw new AppError(
+          "Search term must be at least 2 characters long",
+          400
+        );
+      }
+
       queryObj.firstName = {
         $regex: searchTerm,
         $options: "i", // case-insensitive
       };
     }
-    console.log("test 567", queryObj);
 
-    // 5: Create the base query with filters and search (this searches the whole DB)
+    // 5: Create the base query
     let query = UserModel.find(queryObj);
 
     // 6: Handle sorting if specified
@@ -551,12 +614,20 @@ export const getAllClients = async (
       query = query.select(fields);
     }
 
-    // 8: Get total count of filtered/searched suppliers (for pagination metadata)
+    // 8: Get total count of filtered/searched clients
     const totalResults = await UserModel.countDocuments(queryObj);
 
     // 9: Apply pagination
     const page = req?.query?.page ? Number(req.query?.page) : 1;
     const limit = req?.query?.limit ? Number(req.query?.limit) : 10;
+
+    if (isNaN(page) || page <= 0) {
+      throw new AppError("Page number must be a positive integer", 400);
+    }
+    if (isNaN(limit) || limit <= 0) {
+      throw new AppError("Limit must be a positive integer", 400);
+    }
+
     const skip = (page - 1) * limit;
 
     // 10: Validate page exists (only if page is specified)
@@ -570,12 +641,26 @@ export const getAllClients = async (
     // 12: Execute the query
     const clients = await query;
 
+    // 13: Handle case where no clients found
+    if (!clients || clients.length === 0) {
+      return res.status(200).json({
+        status: "success",
+        message: "No clients found for the given filters",
+        data: {
+          clients: [],
+          totalResults,
+        },
+      });
+    }
+
     const responseObject: IResponseObject = {
       status: "success",
-      message: "Fetching all suppliers success",
+      message: "Fetching all clients success",
       data: {
         clients,
         totalResults,
+        currentPage: page,
+        totalPages: Math.ceil(totalResults / limit),
       },
     };
 
@@ -593,18 +678,31 @@ export const getClientOnId = async (
   try {
     const { id } = req.params;
 
+    // 1: Validate ID is provided
     if (!id) {
-      throw new AppError("Id is missing", 400);
+      throw new AppError("Client ID is required", 400);
     }
 
+    // 2: Validate if ID is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new AppError("Invalid client ID format", 400);
+    }
+
+    // 3: Search for client by ID and type
     const client = await UserModel.findOne({
       _id: id,
       userType: UserType.CLIENT,
     });
 
+    // 4: Handle case where client not found
+    if (!client) {
+      throw new AppError("Client not found", 404);
+    }
+
+    // 5: Success response
     const responseObject: IResponseObject = {
       status: "success",
-      message: "Fetching client on id success",
+      message: "Client fetched successfully",
       data: {
         client,
       },
@@ -624,14 +722,35 @@ export const updateClientOnId = async (
   try {
     const { id } = req.params;
 
+    // 1: Validate ID exists
     if (!id) {
-      throw new AppError("Id is missing", 400);
+      throw new AppError("Client ID is required", 400);
     }
 
-    const updates = {
-      status: req.body.status,
-    };
+    // 2: Validate ID format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new AppError("Invalid client ID format", 400);
+    }
 
+    // 3: Ensure body contains updates
+    if (!req.body || Object.keys(req.body).length === 0) {
+      throw new AppError("No update data provided", 400);
+    }
+
+    // 4: Whitelist allowed updates (only "status" for now)
+    const allowedUpdates = ["status"];
+    const updates: Record<string, any> = {};
+    for (const key of allowedUpdates) {
+      if (req.body[key] !== undefined) {
+        updates[key] = req.body[key];
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      throw new AppError("Invalid or missing fields to update", 400);
+    }
+
+    // 5: Update client
     const updatedClient = await UserModel.findOneAndUpdate(
       { _id: id, userType: UserType.CLIENT },
       updates,
@@ -641,13 +760,20 @@ export const updateClientOnId = async (
       }
     );
 
+    // 6: Handle not found case
+    if (!updatedClient) {
+      throw new AppError("Client not found", 404);
+    }
+
+    // 7: Success response
     const responseObject: IResponseObject = {
       status: "success",
-      message: "Updating client on id success",
+      message: "Client updated successfully",
       data: {
         updatedClient,
       },
     };
+
     return res.status(200).json(responseObject);
   } catch (err: unknown) {
     return next(err);
@@ -662,21 +788,43 @@ export const deleteClientOnId = async (
   try {
     const { id } = req.params;
 
+    // Edge Case 1: Missing ID
     if (!id) {
       throw new AppError("Id is missing", 400);
     }
 
-    await UserModel.findOneAndDelete({ _id: id, userType: UserType.CLIENT });
+    // Edge Case 2: Invalid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new AppError("Invalid client ID format", 400);
+    }
 
+    // Try to delete client
+    const deletedClient = await UserModel.findOneAndDelete({
+      _id: id,
+      userType: UserType.CLIENT,
+    });
+
+    // Edge Case 3: Client not found
+    if (!deletedClient) {
+      throw new AppError("Client not found", 404);
+    }
+
+    // Success
     const responseObject: IResponseObject = {
       status: "success",
       message: "Deleting client on id success",
+      data: {
+        deletedClient, // optional: return deleted client info
+      },
     };
+
     return res.status(200).json(responseObject);
   } catch (err: unknown) {
+    // Edge Case 4: Handle unexpected DB errors
     return next(err);
   }
 };
+
 // DIVIDER Google functions
 
 // FUNCTION
