@@ -15,7 +15,7 @@ export enum UserType {
 
 export enum UserStatus {
   ACTIVE = "active",
-  INACTIVE = "in-active",
+  INACTIVE = "inactive",
 }
 
 export interface IUser extends Document {

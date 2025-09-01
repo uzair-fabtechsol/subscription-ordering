@@ -12,6 +12,7 @@ import {
   getAllSuppliers,
   getSupplierOnId,
   deleteSupplierOnId,
+  updateSupplierOnId,
 } from "@/controllers/auth-controller";
 import express, { RequestHandler, Router } from "express";
 import passport from "../utils/passport";
@@ -56,6 +57,12 @@ router.get(
   "/suppliers/:id",
   restrictedTo(["admin"]) as RequestHandler,
   getSupplierOnId as RequestHandler
+);
+
+router.patch(
+  "/suppliers/:id",
+  restrictedTo(["admin"]) as RequestHandler,
+  updateSupplierOnId as RequestHandler
 );
 
 router.delete(

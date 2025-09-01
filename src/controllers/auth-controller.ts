@@ -6,7 +6,7 @@ import { AppError } from "@/utils/AppError";
 import { generateOTP } from "@/utils/generate-otp";
 import { OtpModel } from "@/models/otp-model";
 import { sendMail } from "@/utils/email";
-import { IUser } from "@/types/auth-types";
+import { IUser, UserType } from "@/types/auth-types";
 import { Types } from "mongoose";
 import dotenv from "dotenv";
 dotenv.config();
@@ -408,13 +408,49 @@ export const getSupplierOnId = async (
   try {
     const { id } = req.params;
 
-    const supplier = await UserModel.findById(id);
+    const supplier = await UserModel.findOne({
+      _id: id,
+      userType: UserType.SUPPLIER,
+    });
 
     return res.status(200).json({
       status: "success",
       message: "Fetching supplier on id success",
       data: {
         supplier,
+      },
+    });
+  } catch (err: unknown) {
+    return next(err);
+  }
+};
+
+export const updateSupplierOnId = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+
+    const updates = {
+      status: req.body.status,
+    };
+
+    const updatedSupplier = await UserModel.findOneAndUpdate(
+      { _id: id, userType: UserType.SUPPLIER },
+      updates,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    return res.status(200).json({
+      status: "success",
+      message: "Deleting supplier on id success",
+      data: {
+        updatedSupplier,
       },
     });
   } catch (err: unknown) {
@@ -430,7 +466,7 @@ export const deleteSupplierOnId = async (
   try {
     const { id } = req.params;
 
-    await UserModel.findByIdAndDelete(id);
+    await UserModel.findOneAndDelete({ _id: id, userType: UserType.SUPPLIER });
 
     return res.status(200).json({
       status: "success",
