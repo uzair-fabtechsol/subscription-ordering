@@ -5,9 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.ts",
+    "prod": "node dist/server.js",
     "build": "tsc && tsc-alias",
-    "start": "node dist/server.js",
-    "debug": "ts-node src/server.ts",
     "prepare": "husky"
   },
   "author": "",
@@ -48,6 +47,7 @@
     "husky": "^9.1.7",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.2"
   }
