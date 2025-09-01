@@ -332,13 +332,81 @@ export const getAllSuppliers = async (
   next: NextFunction
 ) => {
   try {
-    const suppliers = await UserModel.find({ userType: "supplier" });
+    // 1: Prepare the base query object from query params
+    let queryObj = { ...req.query };
+
+    // 2: Exclude pagination, search and other special fields
+    const excludedFields = ["page", "sort", "limit", "fields", "search"];
+    excludedFields.forEach((val) => delete queryObj[val]);
+
+    // 3: Always include userType as supplier in the base query
+    queryObj = { ...queryObj, userType: "supplier" };
+
+    // 4: Handle search functionality on firstName
+    if (req.query?.search) {
+      const searchTerm = req.query.search as string;
+      // Add case-insensitive search on firstName using regex
+      queryObj.firstName = {
+        $regex: searchTerm,
+        $options: "i", // case-insensitive
+      };
+    }
+
+    // 5: Create the base query with filters and search (this searches the whole DB)
+    let query = UserModel.find(queryObj);
+
+    // 6: Handle sorting if specified
+    if (req.query?.sort) {
+      const sortBy = (req.query.sort as string).split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      // Default sort by creation date (newest first)
+      query = query.sort("-createdAt");
+    }
+
+    // 7: Handle field selection if specified
+    if (req.query?.fields) {
+      const fields = (req.query.fields as string).split(",").join(" ");
+      query = query.select(fields);
+    }
+
+    // 8: Get total count of filtered/searched suppliers (for pagination metadata)
+    const totalSuppliers = await UserModel.countDocuments(queryObj);
+
+    // 9: Apply pagination
+    const page = req?.query?.page ? Number(req.query?.page) : 1;
+    const limit = req?.query?.limit ? Number(req.query?.limit) : 10;
+    const skip = (page - 1) * limit;
+
+    // 10: Validate page exists (only if page is specified)
+    if (req.query?.page && skip >= totalSuppliers) {
+      throw new AppError("This page doesn't exist", 404);
+    }
+
+    // 11: Apply pagination to the query
+    query = query.skip(skip).limit(limit);
+
+    // 12: Execute the query
+    const suppliers = await query;
+
+    // 13: Calculate pagination metadata
+    const totalPages = Math.ceil(totalSuppliers / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
 
     return res.status(200).json({
       status: "success",
       message: "Fetching all suppliers success",
       data: {
         suppliers,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalSuppliers,
+          limit,
+          hasNextPage,
+          hasPrevPage,
+        },
       },
     });
   } catch (err: unknown) {
