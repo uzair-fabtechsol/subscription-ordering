@@ -10,6 +10,8 @@ import {
   verifyClientUsingOtp,
   verifySupplierUsingOtp,
   getAllSuppliers,
+  getSupplierOnId,
+  deleteSupplierOnId,
 } from "@/controllers/auth-controller";
 import express, { RequestHandler, Router } from "express";
 import passport from "../utils/passport";
@@ -37,10 +39,29 @@ router.patch(
 
 // DIVIDER admin routes
 router.post("/admin/signin", adminSignin);
+
 router.get(
   "/suppliers",
   restrictedTo(["admin"]) as RequestHandler,
   getAllSuppliers as RequestHandler
+);
+
+router.get(
+  "/suppliers/:id",
+  restrictedTo(["admin"]) as RequestHandler,
+  getSupplierOnId as RequestHandler
+);
+
+router.get(
+  "/suppliers/:id",
+  restrictedTo(["admin"]) as RequestHandler,
+  getSupplierOnId as RequestHandler
+);
+
+router.delete(
+  "/suppliers/:id",
+  restrictedTo(["admin"]) as RequestHandler,
+  deleteSupplierOnId as RequestHandler
 );
 
 // DIVIDER google auth routes

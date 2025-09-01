@@ -323,7 +323,6 @@ export const verifyClientUsingOtp = async (
 
 // DIVIDER Admin functions
 
-// FUNCTION
 export const adminSignin = async (
   req: Request,
   res: Response,
@@ -395,6 +394,47 @@ export const getAllSuppliers = async (
       data: {
         suppliers,
       },
+    });
+  } catch (err: unknown) {
+    return next(err);
+  }
+};
+
+export const getSupplierOnId = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+
+    const supplier = await UserModel.findById(id);
+
+    return res.status(200).json({
+      status: "success",
+      message: "Fetching supplier on id success",
+      data: {
+        supplier,
+      },
+    });
+  } catch (err: unknown) {
+    return next(err);
+  }
+};
+
+export const deleteSupplierOnId = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+
+    await UserModel.findByIdAndDelete(id);
+
+    return res.status(200).json({
+      status: "success",
+      message: "Deleting supplier on id success",
     });
   } catch (err: unknown) {
     return next(err);
