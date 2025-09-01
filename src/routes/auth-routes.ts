@@ -12,6 +12,9 @@ import {
   getSupplierOnId,
   deleteSupplierOnId,
   updateSupplierOnId,
+  getAllClients,
+  getClientOnId,
+  updateClientOnId,
 } from "@/controllers/auth-controller";
 import express, { RequestHandler, Router } from "express";
 import passport from "../utils/passport";
@@ -69,6 +72,30 @@ router.delete(
   "/suppliers/:id",
   restrictedTo(["admin"]) as unknown as RequestHandler,
   deleteSupplierOnId as RequestHandler
+);
+
+router.get(
+  "/clients",
+  restrictedTo(["admin"]) as unknown as RequestHandler,
+  getAllClients as RequestHandler
+);
+
+router.get(
+  "/clients/:id",
+  restrictedTo(["admin"]) as unknown as RequestHandler,
+  getClientOnId as RequestHandler
+);
+
+router.patch(
+  "/clients/:id",
+  restrictedTo(["admin"]) as unknown as RequestHandler,
+  updateClientOnId as RequestHandler
+);
+
+router.delete(
+  "/clients/:id",
+  restrictedTo(["admin"]) as unknown as RequestHandler,
+  deleteClientOnId as RequestHandler
 );
 
 // DIVIDER google auth routes

@@ -378,7 +378,7 @@ export const getAllSuppliers = async (
     }
 
     // 8: Get total count of filtered/searched suppliers (for pagination metadata)
-    const totalSuppliers = await UserModel.countDocuments(queryObj);
+    const totalResults = await UserModel.countDocuments(queryObj);
 
     // 9: Apply pagination
     const page = req?.query?.page ? Number(req.query?.page) : 1;
@@ -386,7 +386,7 @@ export const getAllSuppliers = async (
     const skip = (page - 1) * limit;
 
     // 10: Validate page exists (only if page is specified)
-    if (req.query?.page && skip >= totalSuppliers) {
+    if (req.query?.page && skip >= totalResults) {
       throw new AppError("This page doesn't exist", 404);
     }
 
@@ -396,24 +396,12 @@ export const getAllSuppliers = async (
     // 12: Execute the query
     const suppliers = await query;
 
-    // 13: Calculate pagination metadata
-    const totalPages = Math.ceil(totalSuppliers / limit);
-    const hasNextPage = page < totalPages;
-    const hasPrevPage = page > 1;
-
     const responseObject: IResponseObject = {
       status: "success",
       message: "Fetching all suppliers success",
       data: {
         suppliers,
-        pagination: {
-          currentPage: page,
-          totalPages,
-          totalSuppliers,
-          limit,
-          hasNextPage,
-          hasPrevPage,
-        },
+        totalResults,
       },
     };
 
@@ -430,6 +418,10 @@ export const getSupplierOnId = async (
 ) => {
   try {
     const { id } = req.params;
+
+    if (!id) {
+      throw new AppError("Id is missing", 400);
+    }
 
     const supplier = await UserModel.findOne({
       _id: id,
@@ -458,6 +450,10 @@ export const updateSupplierOnId = async (
   try {
     const { id } = req.params;
 
+    if (!id) {
+      throw new AppError("Id is missing", 400);
+    }
+
     const updates = {
       status: req.body.status,
     };
@@ -473,7 +469,7 @@ export const updateSupplierOnId = async (
 
     const responseObject: IResponseObject = {
       status: "success",
-      message: "Deleting supplier on id success",
+      message: "Updating supplier on id success",
       data: {
         updatedSupplier,
       },
@@ -492,6 +488,10 @@ export const deleteSupplierOnId = async (
   try {
     const { id } = req.params;
 
+    if (!id) {
+      throw new AppError("Id is missing", 400);
+    }
+
     await UserModel.findOneAndDelete({ _id: id, userType: UserType.SUPPLIER });
 
     const responseObject: IResponseObject = {
@@ -504,6 +504,179 @@ export const deleteSupplierOnId = async (
   }
 };
 
+export const getAllClients = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // 1: Prepare the base query object from query params
+    console.log("test 565");
+    let queryObj = { ...req.query };
+
+    // 2: Exclude pagination, search and other special fields
+    const excludedFields = ["page", "sort", "limit", "fields", "search"];
+    excludedFields.forEach((val) => delete queryObj[val]);
+
+    // 3: Always include userType as supplier in the base query
+    queryObj = { ...queryObj, userType: "client" };
+    console.log("test 566", queryObj);
+
+    // 4: Handle search functionality on firstName
+    if (req.query?.search) {
+      const searchTerm = req.query.search as string;
+      // Add case-insensitive search on firstName using regex
+      queryObj.firstName = {
+        $regex: searchTerm,
+        $options: "i", // case-insensitive
+      };
+    }
+    console.log("test 567", queryObj);
+
+    // 5: Create the base query with filters and search (this searches the whole DB)
+    let query = UserModel.find(queryObj);
+
+    // 6: Handle sorting if specified
+    if (req.query?.sort) {
+      const sortBy = (req.query.sort as string).split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      // Default sort by creation date (newest first)
+      query = query.sort("-createdAt");
+    }
+
+    // 7: Handle field selection if specified
+    if (req.query?.fields) {
+      const fields = (req.query.fields as string).split(",").join(" ");
+      query = query.select(fields);
+    }
+
+    // 8: Get total count of filtered/searched suppliers (for pagination metadata)
+    const totalResults = await UserModel.countDocuments(queryObj);
+
+    // 9: Apply pagination
+    const page = req?.query?.page ? Number(req.query?.page) : 1;
+    const limit = req?.query?.limit ? Number(req.query?.limit) : 10;
+    const skip = (page - 1) * limit;
+
+    // 10: Validate page exists (only if page is specified)
+    if (req.query?.page && skip >= totalResults) {
+      throw new AppError("This page doesn't exist", 404);
+    }
+
+    // 11: Apply pagination to the query
+    query = query.skip(skip).limit(limit);
+
+    // 12: Execute the query
+    const clients = await query;
+
+    const responseObject: IResponseObject = {
+      status: "success",
+      message: "Fetching all suppliers success",
+      data: {
+        clients,
+        totalResults,
+      },
+    };
+
+    return res.status(200).json(responseObject);
+  } catch (err: unknown) {
+    return next(err);
+  }
+};
+
+export const getClientOnId = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      throw new AppError("Id is missing", 400);
+    }
+
+    const client = await UserModel.findOne({
+      _id: id,
+      userType: UserType.CLIENT,
+    });
+
+    const responseObject: IResponseObject = {
+      status: "success",
+      message: "Fetching client on id success",
+      data: {
+        client,
+      },
+    };
+
+    return res.status(200).json(responseObject);
+  } catch (err: unknown) {
+    return next(err);
+  }
+};
+
+export const updateClientOnId = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      throw new AppError("Id is missing", 400);
+    }
+
+    const updates = {
+      status: req.body.status,
+    };
+
+    const updatedClient = await UserModel.findOneAndUpdate(
+      { _id: id, userType: UserType.CLIENT },
+      updates,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    const responseObject: IResponseObject = {
+      status: "success",
+      message: "Updating client on id success",
+      data: {
+        updatedClient,
+      },
+    };
+    return res.status(200).json(responseObject);
+  } catch (err: unknown) {
+    return next(err);
+  }
+};
+
+export const deleteClientOnId = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      throw new AppError("Id is missing", 400);
+    }
+
+    await UserModel.findOneAndDelete({ _id: id, userType: UserType.CLIENT });
+
+    const responseObject: IResponseObject = {
+      status: "success",
+      message: "Deleting client on id success",
+    };
+    return res.status(200).json(responseObject);
+  } catch (err: unknown) {
+    return next(err);
+  }
+};
 // DIVIDER Google functions
 
 // FUNCTION
