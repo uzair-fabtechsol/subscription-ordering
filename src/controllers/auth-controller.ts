@@ -353,7 +353,9 @@ export const getSupplierOnId = async (
 ) => {
   try {
     const { id } = req.params;
-
+    if(!id){
+      throw new AppError("Supplier not found", 404);
+  }
     const supplier = await UserModel.findOne({
       _id: id,
       userType: UserType.SUPPLIER,
@@ -378,7 +380,9 @@ export const updateSupplierOnId = async (
 ) => {
   try {
     const { id } = req.params;
-
+if(!id){
+    throw new AppError("Supplier not found", 404);
+}
     const updates = {
       status: req.body.status,
     };
@@ -411,7 +415,9 @@ export const deleteSupplierOnId = async (
 ) => {
   try {
     const { id } = req.params;
-
+    if(!id){
+      throw new AppError("Supplier not found", 404);
+  }
     await UserModel.findOneAndDelete({ _id: id, userType: UserType.SUPPLIER });
 
     return res.status(200).json({
