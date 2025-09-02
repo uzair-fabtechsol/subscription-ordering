@@ -887,6 +887,47 @@ export const editAdminPersonalInfo = async (
   }
 };
 
+export const editAdminSecurityCredentials = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const id = req.user?._id;
+
+    // fetch the admin
+    const admin = await UserModel.findById(id).select("+password");
+
+    // check that the old password is correct
+    const passwordCorrect = admin?.password
+      ? await bcrypt.compare(oldPassword, admin?.password)
+      : false;
+
+    if (!passwordCorrect) {
+      throw new AppError("Old password not correct", 400);
+    }
+
+    // hash the new password and update
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // update the admin
+    await UserModel.findByIdAndUpdate(id, { password: hashedPassword });
+
+    // Success
+    const responseObject: IResponseObject = {
+      status: "success",
+      message: "Security credentials updated",
+    };
+
+    return res.status(200).json(responseObject);
+  } catch (err: unknown) {
+    // Edge Case 4: Handle unexpected DB errors
+    return next(err);
+  }
+};
+
 // DIVIDER Google functions
 
 // FUNCTION

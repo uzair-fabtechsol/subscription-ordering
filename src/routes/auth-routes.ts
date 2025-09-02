@@ -18,6 +18,7 @@ import {
   deleteClientOnId,
   getAdminPersonalInfo,
   editAdminPersonalInfo,
+  editAdminSecurityCredentials,
 } from "@/controllers/auth-controller";
 import express, { RequestHandler, Router } from "express";
 import passport from "../utils/passport";
@@ -111,6 +112,12 @@ router.patch(
   "/admin/personal-information",
   restrictedTo(["admin"]) as unknown as RequestHandler,
   editAdminPersonalInfo as RequestHandler
+);
+
+router.patch(
+  "/admin/edit-admin-security",
+  restrictedTo(["admin"]) as unknown as RequestHandler,
+  editAdminSecurityCredentials as RequestHandler
 );
 
 // DIVIDER google auth routes
