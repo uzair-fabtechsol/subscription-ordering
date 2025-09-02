@@ -47,31 +47,31 @@ router.post("/admin/signin", adminSignin);
 
 router.get(
   "/suppliers",
-  restrictedTo(["admin"]) as unknown as RequestHandler,
+  // restrictedTo(["admin"]) as unknown as RequestHandler,
   getAllSuppliers as RequestHandler
 );
 
 router.get(
   "/suppliers/:id",
-  restrictedTo(["admin"]) as unknown as RequestHandler,
+  // restrictedTo(["admin"]) as unknown as RequestHandler,
   getSupplierOnId as RequestHandler
 );
 
 router.get(
   "/suppliers/:id",
-  restrictedTo(["admin"]) as unknown as RequestHandler,
+  // restrictedTo(["admin"]) as unknown as RequestHandler,
   getSupplierOnId as RequestHandler
 );
 
 router.patch(
   "/suppliers/:id",
-  restrictedTo(["admin"]) as unknown as RequestHandler,
+  // restrictedTo(["admin"]) as unknown as RequestHandler,
   updateSupplierOnId as RequestHandler
 );
 
 router.delete(
   "/suppliers/:id",
-  restrictedTo(["admin"]) as unknown as RequestHandler,
+  // restrictedTo(["admin"]) as unknown as RequestHandler,
   deleteSupplierOnId as RequestHandler
 );
 
