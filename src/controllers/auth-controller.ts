@@ -825,6 +825,68 @@ export const deleteClientOnId = async (
   }
 };
 
+export const getAdminPersonalInfo = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Success
+    const responseObject: IResponseObject = {
+      status: "success",
+      message: "Fetch admin personal information success",
+      data: {
+        admin: {
+          firstName: req.user?.firstName,
+          lastName: req.user?.lastName,
+        },
+      },
+    };
+
+    return res.status(200).json(responseObject);
+  } catch (err: unknown) {
+    // Edge Case 4: Handle unexpected DB errors
+    return next(err);
+  }
+};
+
+export const editAdminPersonalInfo = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { firstName, lastName } = req.body;
+
+    const dataToUpdate = {
+      firstName: firstName,
+      lastName: lastName || "",
+    };
+
+    const updatedAdmin = await UserModel.findByIdAndUpdate(
+      req.user?._id,
+      dataToUpdate,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    // Success
+    const responseObject: IResponseObject = {
+      status: "success",
+      message: "Update admin personal information success",
+      data: {
+        updatedAdmin,
+      },
+    };
+
+    return res.status(200).json(responseObject);
+  } catch (err: unknown) {
+    // Edge Case 4: Handle unexpected DB errors
+    return next(err);
+  }
+};
+
 // DIVIDER Google functions
 
 // FUNCTION

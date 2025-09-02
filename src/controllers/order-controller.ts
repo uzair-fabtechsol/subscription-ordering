@@ -5,10 +5,22 @@ import { ProductModel } from "@/models/product-model";
 import { UserModel } from "@/models/auth-model";
 import { AppError } from "@/utils/AppError";
 import { UserStatus, UserType } from "@/types/auth-types";
-import {isValidObjectId,weekdayFromNumber,addDays,computeNextDeliveryDate,validateUserWithRole,validateProduct,ensureDeliveryFields} from '@/utils/helperFunctions';
+import {
+  isValidObjectId,
+  weekdayFromNumber,
+  addDays,
+  computeNextDeliveryDate,
+  validateUserWithRole,
+  validateProduct,
+  ensureDeliveryFields,
+} from "@/utils/helperFunctions";
 
 // CREATE
-export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
+export const createOrder = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const {
       product,
@@ -35,12 +47,17 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
     if (!product) return next(new AppError("product is required", 400));
     if (!customer) return next(new AppError("customer is required", 400));
     if (!supplier) return next(new AppError("supplier is required", 400));
-    if (quantity === undefined) return next(new AppError("quantity is required", 400));
-    if (price === undefined) return next(new AppError("price is required", 400));
+    if (quantity === undefined)
+      return next(new AppError("quantity is required", 400));
+    if (price === undefined)
+      return next(new AppError("price is required", 400));
 
     ensureDeliveryFields(deliveryInterval, deliveryDay);
 
-    if (customer === supplier) return next(new AppError("customer and supplier cannot be the same user", 400));
+    if (customer === supplier)
+      return next(
+        new AppError("customer and supplier cannot be the same user", 400)
+      );
 
     await validateProduct(product);
     await validateUserWithRole(customer, UserType.CLIENT, "Customer");
@@ -49,10 +66,15 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
     let nextDate: Date;
     if (nextDeliveryDate) {
       const nd = new Date(nextDeliveryDate);
-      if (isNaN(nd.getTime())) return next(new AppError("Invalid nextDeliveryDate", 400));
+      if (isNaN(nd.getTime()))
+        return next(new AppError("Invalid nextDeliveryDate", 400));
       nextDate = nd;
     } else {
-      nextDate = computeNextDeliveryDate(new Date(), deliveryDay, deliveryInterval);
+      nextDate = computeNextDeliveryDate(
+        new Date(),
+        deliveryDay,
+        deliveryInterval
+      );
     }
 
     const order = await OrderModel.create({
@@ -79,7 +101,11 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
 };
 
 // READ ALL with pagination and filtering
-export const getOrders = async (req: Request, res: Response, next: NextFunction) => {
+export const getOrders = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const {
       page,
@@ -102,9 +128,12 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
 
     const filter: Record<string, any> = {};
 
-    if (customer && isValidObjectId(customer)) filter.customer = new Types.ObjectId(customer);
-    if (supplier && isValidObjectId(supplier)) filter.supplier = new Types.ObjectId(supplier);
-    if (product && isValidObjectId(product)) filter.product = new Types.ObjectId(product);
+    if (customer && isValidObjectId(customer))
+      filter.customer = new Types.ObjectId(customer);
+    if (supplier && isValidObjectId(supplier))
+      filter.supplier = new Types.ObjectId(supplier);
+    if (product && isValidObjectId(product))
+      filter.product = new Types.ObjectId(product);
     if (status) filter.status = status;
 
     if (minPrice || maxPrice) {
@@ -132,7 +161,10 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
     }
 
     if (upcoming === "true") {
-      filter.nextDeliveryDate = { ...(filter.nextDeliveryDate || {}), $gte: new Date() };
+      filter.nextDeliveryDate = {
+        ...(filter.nextDeliveryDate || {}),
+        $gte: new Date(),
+      };
     }
 
     // Sorting
@@ -147,7 +179,10 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
 
     if (hasPagination) {
       const pageNum = Math.max(parseInt(page ?? "1", 10) || 1, 1);
-      const limitNum = Math.min(Math.max(parseInt(limit ?? "10", 10) || 10, 1), 100);
+      const limitNum = Math.min(
+        Math.max(parseInt(limit ?? "10", 10) || 10, 1),
+        100
+      );
       const skip = (pageNum - 1) * limitNum;
 
       const [orders, total] = await Promise.all([
@@ -185,7 +220,9 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
         .populate({ path: "supplier", select: "firstName lastName email" })
         .lean();
 
-      return res.status(200).json({ status: "success", results: orders.length, data: orders });
+      return res
+        .status(200)
+        .json({ status: "success", results: orders.length, data: orders });
     }
   } catch (err) {
     return next(err);
@@ -193,10 +230,15 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
 };
 
 // READ ONE
-export const getOrderById = async (req: Request, res: Response, next: NextFunction) => {
+export const getOrderById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id } = req.params as { id: string };
-    if (!isValidObjectId(id)) return next(new AppError("Invalid order ID", 400));
+    if (!isValidObjectId(id))
+      return next(new AppError("Invalid order ID", 400));
 
     const order = await OrderModel.findById(id)
       .select(
@@ -214,10 +256,15 @@ export const getOrderById = async (req: Request, res: Response, next: NextFuncti
 };
 
 // UPDATE
-export const updateOrder = async (req: Request, res: Response, next: NextFunction) => {
+export const updateOrder = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id } = req.params as { id: string };
-    if (!isValidObjectId(id)) return next(new AppError("Invalid order ID", 400));
+    if (!isValidObjectId(id))
+      return next(new AppError("Invalid order ID", 400));
 
     const updates = req.body as Partial<{
       product: string;
@@ -232,10 +279,19 @@ export const updateOrder = async (req: Request, res: Response, next: NextFunctio
       advanceNext?: boolean;
     }>;
 
-    ensureDeliveryFields(updates.deliveryInterval as any, updates.deliveryDay as any);
+    ensureDeliveryFields(
+      updates.deliveryInterval as any,
+      updates.deliveryDay as any
+    );
 
-    if (updates.customer && updates.supplier && updates.customer === updates.supplier) {
-      return next(new AppError("customer and supplier cannot be the same user", 400));
+    if (
+      updates.customer &&
+      updates.supplier &&
+      updates.customer === updates.supplier
+    ) {
+      return next(
+        new AppError("customer and supplier cannot be the same user", 400)
+      );
     }
 
     const existing = await OrderModel.findById(id);
@@ -243,22 +299,36 @@ export const updateOrder = async (req: Request, res: Response, next: NextFunctio
 
     // Validate entities if ids change
     if (updates.product) await validateProduct(updates.product);
-    if (updates.customer) await validateUserWithRole(updates.customer, UserType.CLIENT, "Customer");
-    if (updates.supplier) await validateUserWithRole(updates.supplier, UserType.SUPPLIER, "Supplier");
+    if (updates.customer)
+      await validateUserWithRole(updates.customer, UserType.CLIENT, "Customer");
+    if (updates.supplier)
+      await validateUserWithRole(
+        updates.supplier,
+        UserType.SUPPLIER,
+        "Supplier"
+      );
 
     // Delivery schedule handling
     let nextDate: Date | undefined;
-    const newInterval = updates.deliveryInterval ?? (existing.deliveryInterval as any);
+    const newInterval =
+      updates.deliveryInterval ?? (existing.deliveryInterval as any);
     const newDay = updates.deliveryDay ?? (existing.deliveryDay as any);
 
     if (updates.nextDeliveryDate) {
       const nd = new Date(updates.nextDeliveryDate);
-      if (isNaN(nd.getTime())) return next(new AppError("Invalid nextDeliveryDate", 400));
+      if (isNaN(nd.getTime()))
+        return next(new AppError("Invalid nextDeliveryDate", 400));
       nextDate = nd;
-    } else if (updates.advanceNext === true || (updates.status && updates.status === "delivered")) {
+    } else if (
+      updates.advanceNext === true ||
+      (updates.status && updates.status === "delivered")
+    ) {
       // advance schedule from the current nextDeliveryDate
       nextDate = addDays(new Date(existing.nextDeliveryDate), newInterval * 7);
-    } else if (updates.deliveryInterval !== undefined || updates.deliveryDay !== undefined) {
+    } else if (
+      updates.deliveryInterval !== undefined ||
+      updates.deliveryDay !== undefined
+    ) {
       // recalc based on now if scheduling parameters changed
       nextDate = computeNextDeliveryDate(new Date(), newDay, newInterval);
     }
@@ -284,15 +354,22 @@ export const updateOrder = async (req: Request, res: Response, next: NextFunctio
 };
 
 // DELETE
-export const deleteOrder = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteOrder = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id } = req.params as { id: string };
-    if (!isValidObjectId(id)) return next(new AppError("Invalid order ID", 400));
+    if (!isValidObjectId(id))
+      return next(new AppError("Invalid order ID", 400));
 
     const order = await OrderModel.findByIdAndDelete(id);
     if (!order) return next(new AppError("Order not found", 404));
 
-    return res.status(200).json({ status: "success", message: "Order deleted successfully" });
+    return res
+      .status(200)
+      .json({ status: "success", message: "Order deleted successfully" });
   } catch (err) {
     return next(err);
   }
