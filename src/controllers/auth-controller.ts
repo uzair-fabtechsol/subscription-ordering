@@ -1,5 +1,5 @@
 import jwt, { SignOptions } from "jsonwebtoken";
-import mongoose from "mongoose";
+
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
