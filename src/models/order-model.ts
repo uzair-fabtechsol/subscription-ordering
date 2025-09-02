@@ -20,7 +20,7 @@ const orderSchema = new Schema<IOrder>(
     quantity: { type: Number, required: true, min: 1 },
     price: { type: Number, required: true, min: 0 },
     deliveryInterval: { type: Number, enum: [1, 2, 3, 4], required: true },
-    deliveryDay: { type: Number, enum: [1, 2, 3, 4, 5, 6, 7], required: true },
+    deliveryDay: { type: Number, enum: [1, 2, 3, 4, 5, 6, 7] },
     nextDeliveryDate: { type: Date, required: true },
     status: {
       type: String,

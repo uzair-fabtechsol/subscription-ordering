@@ -12,6 +12,10 @@ import dotenv from "dotenv";
 import { CustomRequest } from "@/types/modified-requests-types";
 import { IResponseObject } from "@/types/response-object-types";
 import mongoose from "mongoose";
+import { createStripeCustomer } from "@/utils/stripe-util-hub";
+import Stripe from "stripe";
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY||'';
+const stripe = new Stripe(STRIPE_SECRET_KEY);
 dotenv.config();
 
 // DIVIDER Supplier functions
@@ -180,7 +184,7 @@ export const signupClient = async (
     if (!result?.success) {
       throw new AppError("Sending otp to email failed", 500);
     }
-
+console.log(otp,'otp-generated')
     // 5 : make a document in otp collection
     await OtpModel.create({
       firstName,
@@ -234,12 +238,22 @@ export const verifyClientUsingOtp = async (
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    const stripeCustomer = await createStripeCustomer(
+      email,
+      `${firstName} ${lastName || ""}`.trim(),
+      { localUserId: otpDoc._id.toString() }
+    );
+
+    // Save Stripe ID back in DB
+    // otpDoc.stripeCustomerId = stripeCustomer.id;
+
     let client = await UserModel.create({
       firstName,
       lastName: lastName || "",
       email,
       password: hashedPassword,
       userType: "client",
+      stripeCustomerId: stripeCustomer.id,
     });
 
     client = client.toObject() as any;
@@ -824,6 +838,83 @@ export const deleteClientOnId = async (
     return next(err);
   }
 };
+
+//DIVIDER (client/customer ONLY) payment method attach
+
+// STEP 1: Create SetupIntent (frontend will use client_secret)
+export const createSetupIntent = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = req.body;
+
+    const user = await UserModel.findById(userId);
+    if (!user || !user.stripeCustomerId) {
+      return res.status(404).json({ message: "User or Stripe customer not found" });
+    }
+
+    const setupIntent = await stripe.setupIntents.create({
+      customer: user.stripeCustomerId,
+      payment_method_types: ["card"],
+    });
+
+    return res.json({ clientSecret: setupIntent.client_secret });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// STEP 2: Attach Payment Method after frontend confirms SetupIntent
+export const attachPaymentMethod = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId, paymentMethodId } = req.body;
+
+    const user = await UserModel.findById(userId);
+    if (!user || !user.stripeCustomerId) {
+      return res.status(404).json({ message: "User or Stripe customer not found" });
+    }
+
+    // Attach payment method to customer
+    await stripe.paymentMethods.attach(paymentMethodId, {
+      customer: user.stripeCustomerId,
+    });
+
+    // Set as default for invoices/subscriptions
+    await stripe.customers.update(user.stripeCustomerId, {
+      invoice_settings: {
+        default_payment_method: paymentMethodId,
+      },
+    });
+
+    return res.json({ message: "Payment method attached and set as default" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+// STEP 3: List payment methods (cards) for a customer
+export const listPaymentMethods = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = req.body;
+
+    const user = await UserModel.findById(userId);
+    if (!user || !user.stripeCustomerId) {
+      return res.status(404).json({ message: "User or Stripe customer not found" });
+    }
+
+    // Fetch all card payment methods for this customer
+    const paymentMethods = await stripe.paymentMethods.list({
+      customer: user.stripeCustomerId,
+      type: "card",
+    });
+
+    return res.json({
+      paymentMethods: paymentMethods.data,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 
 // DIVIDER Google functions
 

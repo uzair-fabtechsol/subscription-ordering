@@ -38,7 +38,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
     if (quantity === undefined) return next(new AppError("quantity is required", 400));
     if (price === undefined) return next(new AppError("price is required", 400));
 
-    ensureDeliveryFields(deliveryInterval, deliveryDay);
+    // ensureDeliveryFields(deliveryInterval, deliveryDay);
 
     if (customer === supplier) return next(new AppError("customer and supplier cannot be the same user", 400));
 

@@ -55,6 +55,7 @@ const otpSchema = new Schema<IOtp>(
         message: "OTP must be a 4-digit number",
       },
     },
+
     expiresAt: {
       type: Date,
       default: () => new Date(Date.now() + 10 * 60 * 1000),
@@ -69,6 +70,7 @@ const otpSchema = new Schema<IOtp>(
         message: "Please provide a valid phone number",
       },
     },
+    stripeCustomerId: { type: String, default: null },
   },
   {
     timestamps: true,

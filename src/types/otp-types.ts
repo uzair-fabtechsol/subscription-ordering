@@ -6,5 +6,6 @@ export interface IOtp {
   otp: number;
   companyName?: string;
   phoneNumber?: string;
+  stripeCustomerId?: string | null;
   expiresAt: Date;
 }

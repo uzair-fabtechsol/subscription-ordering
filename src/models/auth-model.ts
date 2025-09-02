@@ -58,6 +58,8 @@ const userSchema = new Schema<IUser>(
       required: [true, "User status is required"],
       default: UserStatus.ACTIVE,
     },
+    stripeCustomerId: { type: String, default: null }, // For platform customers
+    stripeAccountId: { type: String, default: null },  // For suppliers/sellers
   },
   {
     timestamps: true,

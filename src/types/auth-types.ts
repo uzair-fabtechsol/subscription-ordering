@@ -29,4 +29,7 @@ export interface IUser extends Document {
   googleId?: string;
   avatar?: string;
   status: UserStatus;
+  // Stripe fields
+  stripeCustomerId?: string | null;
+  stripeAccountId?: string | null;
 }
