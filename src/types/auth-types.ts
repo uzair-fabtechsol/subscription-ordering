@@ -29,4 +29,6 @@ export interface IUser extends Document {
   googleId?: string;
   avatar?: string;
   status: UserStatus;
+  passwordResetToken: string | null;
+  passwordResetExpires: Date | null;
 }

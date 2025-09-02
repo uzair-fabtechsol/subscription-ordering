@@ -58,6 +58,14 @@ const userSchema = new Schema<IUser>(
       required: [true, "User status is required"],
       default: UserStatus.ACTIVE,
     },
+    passwordResetToken: {
+      type: String,
+      default: null,
+    },
+    passwordResetExpires: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

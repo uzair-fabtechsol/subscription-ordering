@@ -45,6 +45,8 @@ export const restrictedTo =
         );
       }
 
+      console.log(allowedUserTypes.includes(user.userType));
+
       // 6 : check if user's type is in the allowed list
       if (!allowedUserTypes.includes(user.userType)) {
         return next(new AppError("You are not allowed to do this action", 403));

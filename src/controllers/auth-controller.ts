@@ -1,22 +1,23 @@
 import jwt, { SignOptions } from "jsonwebtoken";
+import mongoose from "mongoose";
+import crypto from "crypto";
 import bcrypt from "bcrypt";
+import dotenv from "dotenv";
 import { UserModel } from "@/models/auth-model";
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "@/utils/AppError";
 import { generateOTP } from "@/utils/generate-otp";
 import { OtpModel } from "@/models/otp-model";
-import { sendMail } from "@/utils/email";
+import { sendMail, sendResetPasswordMail } from "@/utils/email";
 import { UserType } from "@/types/auth-types";
-
-import dotenv from "dotenv";
 import { CustomRequest } from "@/types/modified-requests-types";
 import { IResponseObject } from "@/types/response-object-types";
-import mongoose from "mongoose";
+
 dotenv.config();
 
 // DIVIDER Supplier functions
 
-// FUNCTION this function sends an otp to email
+//  this function sends an otp to email
 export const signupSupplier = async (
   req: Request,
   res: Response,
@@ -133,7 +134,6 @@ export const editSupplierPersonalInfo = async (
   }
 };
 
-// FUNCTION
 export const verifySupplierUsingOtp = async (
   req: Request,
   res: Response,
@@ -218,7 +218,7 @@ export const verifySupplierUsingOtp = async (
 
 // DIVIDER Client functions
 
-// FUNCTION this function sends an otp to email
+//  this function sends an otp to email
 export const signupClient = async (
   req: Request,
   res: Response,
@@ -261,6 +261,68 @@ export const signupClient = async (
     };
     return res.status(200).json(responseObject);
   } catch (err: unknown) {
+    return next(err);
+  }
+};
+
+export const getClientPersonalInfo = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Success
+    const responseObject: IResponseObject = {
+      status: "success",
+      message: "Fetch client personal information success",
+      data: {
+        client: {
+          firstName: req.user?.firstName,
+          lastName: req.user?.lastName,
+        },
+      },
+    };
+
+    return res.status(200).json(responseObject);
+  } catch (err: unknown) {
+    // Edge Case 4: Handle unexpected DB errors
+    return next(err);
+  }
+};
+
+export const editClientPersonalInfo = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { firstName, lastName } = req.body;
+
+    const dataToUpdate = {
+      firstName: firstName,
+      lastName: lastName || req.user.lastName || "",
+    };
+
+    const updatedAdmin = await UserModel.findByIdAndUpdate(
+      req.user?._id,
+      dataToUpdate,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    // Success
+    const responseObject: IResponseObject = {
+      status: "success",
+      message: "Update admin personal information success",
+      data: {
+        updatedAdmin,
+      },
+    };
+
+    return res.status(200).json(responseObject);
+  } catch (err: unknown) {
+    // Edge Case 4: Handle unexpected DB errors
     return next(err);
   }
 };
@@ -924,7 +986,7 @@ export const editAdminPersonalInfo = async (
 
     const dataToUpdate = {
       firstName: firstName,
-      lastName: lastName || "",
+      lastName: lastName || req.user.lastName || "",
     };
 
     const updatedAdmin = await UserModel.findByIdAndUpdate(
@@ -942,47 +1004,6 @@ export const editAdminPersonalInfo = async (
       data: {
         updatedAdmin,
       },
-    };
-
-    return res.status(200).json(responseObject);
-  } catch (err: unknown) {
-    // Edge Case 4: Handle unexpected DB errors
-    return next(err);
-  }
-};
-
-export const editAdminSecurityCredentials = async (
-  req: CustomRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { oldPassword, newPassword } = req.body;
-    const id = req.user?._id;
-
-    // fetch the admin
-    const admin = await UserModel.findById(id).select("+password");
-
-    // check that the old password is correct
-    const passwordCorrect = admin?.password
-      ? await bcrypt.compare(oldPassword, admin?.password)
-      : false;
-
-    if (!passwordCorrect) {
-      throw new AppError("Old password not correct", 400);
-    }
-
-    // hash the new password and update
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-    // update the admin
-    await UserModel.findByIdAndUpdate(id, { password: hashedPassword });
-
-    // Success
-    const responseObject: IResponseObject = {
-      status: "success",
-      message: "Security credentials updated",
     };
 
     return res.status(200).json(responseObject);
@@ -1190,5 +1211,153 @@ export const convertClientToSupplier = async (
     res.status(200).json(responseObject);
   } catch (err: unknown) {
     return next(err);
+  }
+};
+
+// FUNCTION
+export const editUserSecurityCredentials = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const id = req.user?._id;
+
+    // fetch the admin
+    const admin = await UserModel.findById(id).select("+password");
+
+    // check that the old password is correct
+    const passwordCorrect = admin?.password
+      ? await bcrypt.compare(oldPassword, admin?.password)
+      : false;
+
+    if (!passwordCorrect) {
+      throw new AppError("Old password not correct", 400);
+    }
+
+    // hash the new password and update
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // update the admin
+    await UserModel.findByIdAndUpdate(id, { password: hashedPassword });
+
+    // Success
+    const responseObject: IResponseObject = {
+      status: "success",
+      message: "Security credentials updated",
+    };
+
+    return res.status(200).json(responseObject);
+  } catch (err: unknown) {
+    // Edge Case 4: Handle unexpected DB errors
+    return next(err);
+  }
+};
+
+// FUNCTION this sends the reset url to email
+export const forgotPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res
+        .status(400)
+        .json({ status: "fail", message: "Email is required" });
+    }
+
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ status: "fail", message: "User not found" });
+    }
+
+    // 1. Generate reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    // 2. Save hashed token + expiry in DB
+    user.passwordResetToken = hashedToken;
+    user.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+    await user.save({ validateBeforeSave: false });
+
+    // 3. Create reset link (frontend route)
+    const resetLink = `http://localhost:3000/reset-password?token=${resetToken}&email=${email}`;
+
+    // 4. Send email
+    await sendResetPasswordMail(email, resetLink);
+
+    res.status(200).json({
+      status: "success",
+      message: "Reset password link sent to email",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const resetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    // 1. Hash the token because you stored a hashed version in DB
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    // 2. Find user with valid token (not expired)
+    const user = await UserModel.findOne({
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ status: "fail", message: "Invalid or expired token" });
+    }
+
+    // 3. Update password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    user.password = hashedPassword;
+    user.passwordResetToken = null;
+    user.passwordResetExpires = null;
+    await user.save();
+
+    // 8 : preparation for jwt
+    const jwtSecret: string = process.env.JWT_SECRET!;
+    const jwtExpiresIn: number =
+      Number(process.env.JWT_EXPIRES_IN) || 259200000;
+
+    const signOptions: SignOptions = {
+      expiresIn: jwtExpiresIn,
+    };
+
+    // 9 : sign token
+    const newToken = jwt.sign({ id: String(user._id) }, jwtSecret, signOptions);
+
+    const responseObject: IResponseObject = {
+      status: "success",
+      message: "Password reset successful",
+      data: {
+        jwt: newToken,
+      },
+    };
+
+    return res.status(200).json(responseObject);
+  } catch (err) {
+    next(err);
   }
 };
