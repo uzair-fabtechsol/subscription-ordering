@@ -36,6 +36,9 @@ export const restrictedTo =
       // 5 : get user from DB
       const user = await UserModel.findById(userId);
 
+      console.log(allowedUserTypes);
+      console.log(user);
+
       if (!user) {
         return next(
           new AppError("The user belonging to this token no longer exists", 401)

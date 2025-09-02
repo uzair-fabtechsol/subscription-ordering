@@ -69,6 +69,70 @@ export const signupSupplier = async (
   }
 };
 
+export const getSupplierPersonalInfo = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Success
+    const responseObject: IResponseObject = {
+      status: "success",
+      message: "Fetch supper info success",
+      data: {
+        firstName: req.user.firstName,
+        lastName: req.user.lastName,
+        companyName: req.user.companyName,
+        phoneNumber: req.user.phoneNumber,
+      },
+    };
+
+    return res.status(200).json(responseObject);
+  } catch (err: unknown) {
+    // Edge Case 4: Handle unexpected DB errors
+    return next(err);
+  }
+};
+
+export const editSupplierPersonalInfo = async (
+  req: CustomRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { firstName, lastName, companyName, phoneNumber } = req.body;
+
+    const dataToUpdate = {
+      firstName,
+      lastName: lastName || req.user.lastName,
+      companyName: companyName || req.user.companyName,
+      phoneNumber: phoneNumber || req.user.phoneNumber,
+    };
+
+    const updatedSupplier = await UserModel.findByIdAndUpdate(
+      req.user?._id,
+      dataToUpdate,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    // Success
+    const responseObject: IResponseObject = {
+      status: "success",
+      message: "Update supplier personal information success",
+      data: {
+        updatedSupplier,
+      },
+    };
+
+    return res.status(200).json(responseObject);
+  } catch (err: unknown) {
+    // Edge Case 4: Handle unexpected DB errors
+    return next(err);
+  }
+};
+
 // FUNCTION
 export const verifySupplierUsingOtp = async (
   req: Request,

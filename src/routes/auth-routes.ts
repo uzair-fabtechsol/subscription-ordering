@@ -19,8 +19,16 @@ import {
   getAdminPersonalInfo,
   editAdminPersonalInfo,
   editAdminSecurityCredentials,
+  getSupplierPersonalInfo,
+  editSupplierPersonalInfo,
 } from "@/controllers/auth-controller";
-import express, { RequestHandler, Router } from "express";
+import express, {
+  NextFunction,
+  Request,
+  RequestHandler,
+  Response,
+  Router,
+} from "express";
 import passport from "../utils/passport";
 import { restrictedTo } from "@/middlewares/restricted-to";
 
@@ -33,6 +41,23 @@ router.post("/supplier/signup", signupSupplier);
 router.get("/supplier/curr", getCurrSupplierOrCLient);
 router.post("/supplier/signin", signinSupplierOrClient);
 router.post("/supplier/verify", verifySupplierUsingOtp);
+router.get(
+  "/supplier/personal-information",
+
+  restrictedTo(["supplier"]) as unknown as RequestHandler,
+  getSupplierPersonalInfo as RequestHandler
+);
+router.patch(
+  "/supplier/personal-information",
+  restrictedTo(["supplier"]) as unknown as RequestHandler,
+  editSupplierPersonalInfo as RequestHandler
+);
+
+router.patch(
+  "/supplier/security-credentials",
+  restrictedTo(["supplier"]) as unknown as RequestHandler,
+  editAdminSecurityCredentials as RequestHandler
+);
 
 // DIVIDER client  routes
 router.post("/client/signup", signupClient);
