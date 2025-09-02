@@ -18,9 +18,24 @@ import {
   deleteClientOnId,
   createSetupIntent,
   attachPaymentMethod,
-  listPaymentMethods
+  listPaymentMethods,
+  getAdminPersonalInfo,
+  editAdminPersonalInfo,
+  getSupplierPersonalInfo,
+  editSupplierPersonalInfo,
+  getClientPersonalInfo,
+  editClientPersonalInfo,
+  editUserSecurityCredentials,
+  forgotPassword,
+  resetPassword,
 } from "@/controllers/auth-controller";
-import express, { RequestHandler, Router } from "express";
+import express, {
+  NextFunction,
+  Request,
+  RequestHandler,
+  Response,
+  Router,
+} from "express";
 import passport from "../utils/passport";
 import { restrictedTo } from "@/middlewares/restricted-to";
 
@@ -33,6 +48,16 @@ router.post("/supplier/signup", signupSupplier);
 router.get("/supplier/curr", getCurrSupplierOrCLient);
 router.post("/supplier/signin", signinSupplierOrClient);
 router.post("/supplier/verify", verifySupplierUsingOtp);
+router.get(
+  "/supplier/personal-information",
+  restrictedTo(["supplier"]) as unknown as RequestHandler,
+  getSupplierPersonalInfo as RequestHandler
+);
+router.patch(
+  "/supplier/personal-information",
+  restrictedTo(["supplier"]) as unknown as RequestHandler,
+  editSupplierPersonalInfo as RequestHandler
+);
 
 // DIVIDER client  routes
 router.post("/client/signup", signupClient);
@@ -49,6 +74,18 @@ router.patch(
   "/convert-client-to-supplier",
   restrictedTo(["client"]) as unknown as RequestHandler,
   convertClientToSupplier as RequestHandler
+);
+
+router.get(
+  "/client/personal-information",
+  restrictedTo(["client"]) as unknown as RequestHandler,
+  getClientPersonalInfo as RequestHandler
+);
+
+router.patch(
+  "/client/personal-information",
+  restrictedTo(["client"]) as unknown as RequestHandler,
+  editClientPersonalInfo as RequestHandler
 );
 
 
@@ -110,6 +147,18 @@ router.delete(
   deleteClientOnId as RequestHandler
 );
 
+router.get(
+  "/admin/personal-information",
+  restrictedTo(["admin"]) as unknown as RequestHandler,
+  getAdminPersonalInfo as RequestHandler
+);
+
+router.patch(
+  "/admin/personal-information",
+  restrictedTo(["admin"]) as unknown as RequestHandler,
+  editAdminPersonalInfo as RequestHandler
+);
+
 // DIVIDER google auth routes
 router.get("/google", (req, res, next) => {
   // stash userType temporarily in the state param
@@ -128,6 +177,7 @@ router.get("/google", (req, res, next) => {
     state,
   })(req, res, next);
 });
+
 router.get(
   "/google/callback",
   passport.authenticate("google", {
@@ -136,5 +186,16 @@ router.get(
   }),
   sendJwtGoogle as RequestHandler
 );
+
+// DIVIDER common routes
+router.patch(
+  "/security-credentials",
+  restrictedTo(["admin", "client", "supplier"]) as unknown as RequestHandler,
+  editUserSecurityCredentials as RequestHandler
+);
+
+router.post("/forgot-password", forgotPassword);
+
+router.patch("/reset-password", resetPassword);
 
 export default router;

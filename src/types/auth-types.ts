@@ -29,6 +29,8 @@ export interface IUser extends Document {
   googleId?: string;
   avatar?: string;
   status: UserStatus;
+  passwordResetToken: string | null;
+  passwordResetExpires: Date | null;
   // Stripe fields
   stripeCustomerId?: string | null;
   stripeAccountId?: string | null;

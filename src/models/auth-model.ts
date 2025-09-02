@@ -60,6 +60,14 @@ const userSchema = new Schema<IUser>(
     },
     stripeCustomerId: { type: String, default: null }, // For platform customers
     stripeAccountId: { type: String, default: null },  // For suppliers/sellers
+    passwordResetToken: {
+      type: String,
+      default: null,
+    },
+    passwordResetExpires: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
