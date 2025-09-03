@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { Types } from "mongoose";
 import { CategoryModel } from "@/models/category-model";
 import { AppError } from "@/utils/AppError";
-import { ICategory } from "@/types/catagory-types";
+import { ICategory } from "@/types/category-types";
 import { IResponseObject } from "@/types/response-object-types";
 
 // Extend Request type for TS safety if needed

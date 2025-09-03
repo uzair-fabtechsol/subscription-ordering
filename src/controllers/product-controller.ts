@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { Types } from "mongoose";
 import { ProductModel } from "@/models/product-model";
 import { AppError } from "@/utils/AppError";
+import { IResponseObject } from "@/types/response-object-types";
 
 // Extend Request type for TS safety if needed
 interface ProductRequest extends Request {
@@ -52,7 +53,10 @@ export const createProduct = async (
     const existing = await ProductModel.findOne({ name, category });
     if (existing) {
       return next(
-        new AppError("Product with this name already exists in the category", 400)
+        new AppError(
+          "Product with this name already exists in the category",
+          400
+        )
       );
     }
 
@@ -71,10 +75,15 @@ export const createProduct = async (
 
     const product = await ProductModel.create(payload);
 
-    return res.status(201).json({
+    const responseObject: IResponseObject = {
       status: "success",
-      data: product,
-    });
+      message: "Product creation success",
+      data: {
+        product,
+      },
+    };
+
+    return res.status(201).json(responseObject);
   } catch (err) {
     return next(err);
   }
@@ -155,15 +164,21 @@ export const getProducts = async (
         ProductModel.countDocuments(filter),
       ]);
 
-      return res.status(200).json({
+      const responseObject: IResponseObject = {
         status: "success",
-        page: pageNum,
-        limit: limitNum,
-        total,
-        totalPages: Math.ceil(total / limitNum),
-        results: products.length,
-        data: products,
-      });
+        message: "Fetching products success",
+        data: {
+          status: "success",
+          page: pageNum,
+          limit: limitNum,
+          total,
+          totalPages: Math.ceil(total / limitNum),
+          results: products.length,
+          products,
+        },
+      };
+
+      return res.status(200).json(responseObject);
     } else {
       const products = await ProductModel.find(filter)
         .sort({ createdAt: -1 })
@@ -207,10 +222,15 @@ export const getProductById = async (
       return next(new AppError("Product not found", 404));
     }
 
-    return res.status(200).json({
+    const responseObject: IResponseObject = {
       status: "success",
-      data: product,
-    });
+      message: "Get product by id",
+      data: {
+        product,
+      },
+    };
+
+    return res.status(200).json(responseObject);
   } catch (err) {
     return next(err);
   }
@@ -239,7 +259,11 @@ export const updateProduct = async (
       const targetCategory = req.body.category;
       const targetName = req.body.name;
 
-      if (targetName && targetCategory && Types.ObjectId.isValid(targetCategory)) {
+      if (
+        targetName &&
+        targetCategory &&
+        Types.ObjectId.isValid(targetCategory)
+      ) {
         const duplicate = await ProductModel.findOne({
           _id: { $ne: id },
           name: targetName,
@@ -269,10 +293,15 @@ export const updateProduct = async (
       return next(new AppError("Product not found", 404));
     }
 
-    return res.status(200).json({
+    const responseObject: IResponseObject = {
       status: "success",
-      data: product,
-    });
+      message: "Product update success",
+      data: {
+        product,
+      },
+    };
+
+    return res.status(200).json(responseObject);
   } catch (err) {
     return next(err);
   }
@@ -297,10 +326,12 @@ export const deleteProduct = async (
       return next(new AppError("Product not found", 404));
     }
 
-    return res.status(200).json({
+    const responseObject: IResponseObject = {
       status: "success",
       message: "Product deleted successfully",
-    });
+    };
+
+    return res.status(200).json(responseObject);
   } catch (err) {
     return next(err);
   }

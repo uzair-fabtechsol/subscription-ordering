@@ -1,16 +1,5 @@
+import { IProduct } from "@/types/product-types";
 import mongoose, { Schema, Document } from "mongoose";
-
-export interface IProduct extends Document {
-  name: string;
-  category: mongoose.Types.ObjectId; // Reference to Category
-  images: string[];
-  stock: number;
-  description?: string;
-  price: number;
-  discount?: number;
-  profit?: number;
-  status: "active" | "inactive";
-}
 
 const productSchema = new Schema<IProduct>(
   {
@@ -72,7 +61,4 @@ const productSchema = new Schema<IProduct>(
   }
 );
 
-export const ProductModel = mongoose.model<IProduct>(
-  "Product",
-  productSchema
-);
+export const ProductModel = mongoose.model<IProduct>("Product", productSchema);
