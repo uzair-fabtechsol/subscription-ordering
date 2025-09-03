@@ -7,29 +7,11 @@ import {
   signupSupplier,
   verifyClientUsingOtp,
   verifySupplierUsingOtp,
-  getAllSuppliers,
-  getSupplierOnId,
-  deleteSupplierOnId,
-  updateSupplierOnId,
-  getAllClients,
-  getClientOnId,
-  updateClientOnId,
-  deleteClientOnId,
-  getAdminPersonalInfo,
-  editAdminPersonalInfo,
-  editUserSecurityCredentials,
   forgotPassword,
   resetPassword,
 } from "@/controllers/auth-controller";
-import express, {
-  NextFunction,
-  Request,
-  RequestHandler,
-  Response,
-  Router,
-} from "express";
+import express, { RequestHandler, Router } from "express";
 import passport from "../utils/passport";
-import { restrictedTo } from "@/middlewares/restricted-to";
 
 const router: Router = express.Router();
 
@@ -49,72 +31,6 @@ router.post("/client/verify", verifyClientUsingOtp);
 
 // DIVIDER admin routes
 router.post("/admin/signin", adminSignin);
-
-router.get(
-  "/suppliers",
-  // restrictedTo(["admin"]) as unknown as RequestHandler,
-  getAllSuppliers as RequestHandler
-);
-
-router.get(
-  "/suppliers/:id",
-  // restrictedTo(["admin"]) as unknown as RequestHandler,
-  getSupplierOnId as RequestHandler
-);
-
-router.get(
-  "/suppliers/:id",
-  // restrictedTo(["admin"]) as unknown as RequestHandler,
-  getSupplierOnId as RequestHandler
-);
-
-router.patch(
-  "/suppliers/:id",
-  // restrictedTo(["admin"]) as unknown as RequestHandler,
-  updateSupplierOnId as RequestHandler
-);
-
-router.delete(
-  "/suppliers/:id",
-  // restrictedTo(["admin"]) as unknown as RequestHandler,
-  deleteSupplierOnId as RequestHandler
-);
-
-router.get(
-  "/clients",
-  restrictedTo(["admin"]) as unknown as RequestHandler,
-  getAllClients as RequestHandler
-);
-
-router.get(
-  "/clients/:id",
-  // restrictedTo(["admin"]) as unknown as RequestHandler,
-  getClientOnId as RequestHandler
-);
-
-router.patch(
-  "/clients/:id",
-  // restrictedTo(["admin"]) as unknown as RequestHandler,
-  updateClientOnId as RequestHandler
-);
-
-router.delete(
-  "/clients/:id",
-  // restrictedTo(["admin"]) as unknown as RequestHandler,
-  deleteClientOnId as RequestHandler
-);
-
-router.get(
-  "/admin/personal-information",
-  restrictedTo(["admin"]) as unknown as RequestHandler,
-  getAdminPersonalInfo as RequestHandler
-);
-
-router.patch(
-  "/admin/personal-information",
-  restrictedTo(["admin"]) as unknown as RequestHandler,
-  editAdminPersonalInfo as RequestHandler
-);
 
 // DIVIDER google auth routes
 router.get("/google", (req, res, next) => {
@@ -144,13 +60,7 @@ router.get(
   sendJwtGoogle as RequestHandler
 );
 
-// DIVIDER common routes
-router.patch(
-  "/security-credentials",
-  restrictedTo(["admin", "client", "supplier"]) as unknown as RequestHandler,
-  editUserSecurityCredentials as RequestHandler
-);
-
+// DIVIDER
 router.post("/forgot-password", forgotPassword);
 
 router.patch("/reset-password", resetPassword);
