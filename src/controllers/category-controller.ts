@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { Types } from "mongoose";
-import { CategoryModel, ICategory } from "@/models/category-model";
+import { CategoryModel } from "@/models/category-model";
 import { AppError } from "@/utils/AppError";
+import { ICategory } from "@/types/catagory-types";
+import { IResponseObject } from "@/types/response-object-types";
 
 // Extend Request type for TS safety if needed
 interface CategoryRequest extends Request {
@@ -32,15 +34,17 @@ export const createCategory = async (
       status,
     });
 
-    return res.status(201).json({
+    const responseObject: IResponseObject = {
       status: "success",
-      data: category,
-    });
+      message: "Catagory created",
+      data: { category },
+    };
+
+    return res.status(201).json(responseObject);
   } catch (err) {
     return next(err);
   }
 };
-
 
 export const getCategories = async (
   req: Request,
@@ -100,7 +104,6 @@ export const getCategories = async (
     return next(err);
   }
 };
-
 
 // READ ONE
 export const getCategoryById = async (

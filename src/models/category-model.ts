@@ -1,11 +1,5 @@
+import { ICategory } from "@/types/catagory-types";
 import mongoose, { Schema, Document } from "mongoose";
-
-export interface ICategory extends Document {
-  name: string;
-  description?: string;
-  image?: string;
-  status: "active" | "inactive";
-}
 
 const categorySchema = new Schema<ICategory>(
   {
