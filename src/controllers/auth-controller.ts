@@ -15,7 +15,7 @@ import { IResponseObject } from "@/types/response-object-types";
 import mongoose from "mongoose";
 import { createStripeCustomer } from "@/utils/stripe-util-hub";
 import Stripe from "stripe";
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY||'';
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
 const stripe = new Stripe(STRIPE_SECRET_KEY);
 dotenv.config();
 
@@ -248,7 +248,7 @@ export const signupClient = async (
     if (!result?.success) {
       throw new AppError("Sending otp to email failed", 500);
     }
-console.log(otp,'otp-generated')
+    console.log(otp, "otp-generated");
     // 5 : make a document in otp collection
     await OtpModel.create({
       firstName,
@@ -968,13 +968,19 @@ export const deleteClientOnId = async (
 //DIVIDER (client/customer ONLY) payment method attach
 
 // STEP 1: Create SetupIntent (frontend will use client_secret)
-export const createSetupIntent = async (req: Request, res: Response, next: NextFunction) => {
+export const createSetupIntent = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { userId } = req.body;
 
     const user = await UserModel.findById(userId);
     if (!user || !user.stripeCustomerId) {
-      return res.status(404).json({ message: "User or Stripe customer not found" });
+      return res
+        .status(404)
+        .json({ message: "User or Stripe customer not found" });
     }
 
     const setupIntent = await stripe.setupIntents.create({
@@ -989,13 +995,19 @@ export const createSetupIntent = async (req: Request, res: Response, next: NextF
 };
 
 // STEP 2: Attach Payment Method after frontend confirms SetupIntent
-export const attachPaymentMethod = async (req: Request, res: Response, next: NextFunction) => {
+export const attachPaymentMethod = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { userId, paymentMethodId } = req.body;
 
     const user = await UserModel.findById(userId);
     if (!user || !user.stripeCustomerId) {
-      return res.status(404).json({ message: "User or Stripe customer not found" });
+      return res
+        .status(404)
+        .json({ message: "User or Stripe customer not found" });
     }
 
     // Attach payment method to customer
@@ -1016,15 +1028,20 @@ export const attachPaymentMethod = async (req: Request, res: Response, next: Nex
   }
 };
 
-
 // STEP 3: List payment methods (cards) for a customer
-export const listPaymentMethods = async (req: Request, res: Response, next: NextFunction) => {
+export const listPaymentMethods = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { userId } = req.body;
 
     const user = await UserModel.findById(userId);
     if (!user || !user.stripeCustomerId) {
-      return res.status(404).json({ message: "User or Stripe customer not found" });
+      return res
+        .status(404)
+        .json({ message: "User or Stripe customer not found" });
     }
 
     // Fetch all card payment methods for this customer
@@ -1040,7 +1057,6 @@ export const listPaymentMethods = async (req: Request, res: Response, next: Next
     next(err);
   }
 };
-
 
 export const getAdminPersonalInfo = async (
   req: CustomRequest,
