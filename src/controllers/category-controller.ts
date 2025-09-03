@@ -36,7 +36,7 @@ export const createCategory = async (
 
     const responseObject: IResponseObject = {
       status: "success",
-      message: "Catagory created",
+      message: "Category created",
       data: { category },
     };
 
@@ -91,15 +91,20 @@ export const getCategories = async (
       CategoryModel.countDocuments(filter),
     ]);
 
-    return res.status(200).json({
+    const responseObject: IResponseObject = {
       status: "success",
-      page: pageNum,
-      limit: limitNum,
-      total,
-      totalPages: Math.ceil(total / limitNum),
-      results: categories.length,
-      data: categories,
-    });
+      message: "Fetch all categories success",
+      data: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+        results: categories.length,
+        categories,
+      },
+    };
+
+    return res.status(200).json(responseObject);
   } catch (err) {
     return next(err);
   }
@@ -124,10 +129,15 @@ export const getCategoryById = async (
       return next(new AppError("Category not found", 404));
     }
 
-    return res.status(200).json({
+    const responseObject: IResponseObject = {
       status: "success",
-      data: category,
-    });
+      message: "Fetch catagory by id success",
+      data: {
+        category,
+      },
+    };
+
+    return res.status(200).json(responseObject);
   } catch (err) {
     return next(err);
   }
@@ -155,10 +165,15 @@ export const updateCategory = async (
       return next(new AppError("Category not found", 404));
     }
 
-    return res.status(200).json({
+    const responseObject: IResponseObject = {
       status: "success",
-      data: category,
-    });
+      message: "Category updated",
+      data: {
+        category,
+      },
+    };
+
+    return res.status(200).json(responseObject);
   } catch (err) {
     return next(err);
   }
@@ -183,10 +198,12 @@ export const deleteCategory = async (
       return next(new AppError("Category not found", 404));
     }
 
-    return res.status(200).json({
+    const responseObject: IResponseObject = {
       status: "success",
       message: "Category deleted successfully",
-    });
+    };
+
+    return res.status(200).json(responseObject);
   } catch (err) {
     return next(err);
   }
