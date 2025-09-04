@@ -51,14 +51,14 @@ export const getAllSupportTickets = asyncHandler(async (req: Request, res: Respo
   if (request.user.userType === 'admin') {
     
     total = await SupportTicketModel.countDocuments();
-    tickets = await SupportTicketModel.find()
+    tickets = await SupportTicketModel.find().sort({ createdAt: -1 })
       .populate('user', 'firstName lastName email')
       .skip(skip)
       .limit(limit);
   } else {
  
     total = await SupportTicketModel.countDocuments({ user: request.user._id });
-    tickets = await SupportTicketModel.find({ user: request.user._id })
+    tickets = await SupportTicketModel.find({ user: request.user._id }).sort({ createdAt: -1 })
       .populate('user', 'firstName lastName email')
       .skip(skip)
       .limit(limit);
