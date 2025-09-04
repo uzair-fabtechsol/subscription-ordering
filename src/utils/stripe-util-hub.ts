@@ -19,6 +19,50 @@ export async function createStripeCustomer(
   });
 }
 
+export async function createConnectAccount(
+  email: string,
+  country = "US"
+): Promise<string> {
+  const account = await stripe.accounts.create({
+    type: "express",
+    country,
+    email,
+    capabilities: {
+      transfers: { requested: true },
+      card_payments: { requested: true },
+    },
+  });
+
+  return account.id; // store this in your DB
+}
+
+/**
+ * Generate an onboarding link for an existing Connect account
+ */
+export async function generateOnboardingLink(accountId: string): Promise<string> {
+  const accountLink = await stripe.accountLinks.create({
+    account: accountId,
+    refresh_url: "https://your-app.com/reauth", // update with your frontend route
+    return_url: "https://your-app.com/success", // update with your frontend route
+    type: "account_onboarding",
+  });
+
+  return accountLink.url;
+}
+
+/**
+ * Check if a Connect account is fully onboarded and payouts are enabled
+ */
+export async function checkAccountStatus(accountId: string) {
+  const account = await stripe.accounts.retrieve(accountId);
+
+  return {
+    chargesEnabled: account.charges_enabled,
+    payoutsEnabled: account.payouts_enabled,
+    detailsSubmitted: account.details_submitted,
+  };
+}
+
 // ***************************************Frontend Flow (React + Stripe.js)******************************************
 
 // Create SetupIntent

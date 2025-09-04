@@ -13,7 +13,7 @@ import { UserType } from "@/types/auth-types";
 import { CustomRequest } from "@/types/modified-requests-types";
 import { IResponseObject } from "@/types/response-object-types";
 import mongoose from "mongoose";
-import { createStripeCustomer } from "@/utils/stripe-util-hub";
+import { createStripeCustomer ,createConnectAccount ,generateOnboardingLink} from "@/utils/stripe-util-hub";
 import Stripe from "stripe";
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
 const stripe = new Stripe(STRIPE_SECRET_KEY);
@@ -43,6 +43,8 @@ export const signupSupplier = async (
 
     // 3 : generate an opt
     const otp = generateOTP();
+
+console.log(otp,'otp generated');
 
     // 4 : send the otp to email
     const result = await sendMail(email, Number(otp));
@@ -74,6 +76,8 @@ export const signupSupplier = async (
   }
 };
 
+
+
 export const verifySupplierUsingOtp = async (
   req: Request,
   res: Response,
@@ -83,24 +87,19 @@ export const verifySupplierUsingOtp = async (
     // 1 : take otp out of request body
     let { otp } = req.body;
 
-    // 2 : check if otp exists
     if (!otp) {
       throw new AppError("Otp not provided", 400);
     }
 
-    // 3 : convert the otp into number
     otp = Number(otp);
 
-    // 4 : find the document against the concerned otp
     const otpDoc = await OtpModel.findOne({ otp });
 
-    // 6 : check if otp is expired or invalid
     if (!otpDoc || otpDoc.expiresAt < new Date()) {
       await OtpModel.findByIdAndDelete(otpDoc?._id);
       throw new AppError("OTP invalid or expired", 400);
     }
 
-    // 7 : signup the client, create a document in user collection and send a jwt
     const { firstName, lastName, email, password, companyName, phoneNumber } =
       otpDoc;
 
@@ -117,44 +116,134 @@ export const verifySupplierUsingOtp = async (
       phoneNumber,
     });
 
-    console.log("supplier", supplier);
+    //  ✅ Create Stripe Connect account
+    const stripeAccountId = await createConnectAccount(email);
+
+    // ✅ Optionally, generate onboarding link right away
+    const onboardingUrl = await generateOnboardingLink(stripeAccountId);
+
+    // ✅ Update supplier doc with Stripe Account Id
+    supplier.stripeAccountId = stripeAccountId;
+    await supplier.save();
 
     supplier = supplier.toObject() as any;
 
-    // 8 : preparation for jwt
+    //  Prepare JWT
     const jwtSecret: string = process.env.JWT_SECRET!;
     const jwtExpiresIn: number =
       Number(process.env.JWT_EXPIRES_IN) || 259200000;
 
-    const signOptions: SignOptions = {
-      expiresIn: jwtExpiresIn,
-    };
+    const signOptions: SignOptions = { expiresIn: jwtExpiresIn };
 
-    // 9 : sign token
     const token = jwt.sign(
       { id: String(supplier._id) },
       jwtSecret,
       signOptions
     );
 
-    // 1 : once the user is created the otp document should be deleted
+    // Delete OTP doc
     await OtpModel.findByIdAndDelete(otpDoc?._id);
 
-    // 12 : return response
-
+    // Return response
     const responseObject: IResponseObject = {
       status: "success",
       message: "Supplier sign up success",
       data: {
         supplier,
         jwt: token,
+        stripeOnboardingUrl: onboardingUrl, // 👈 return to frontend if needed
       },
     };
+
     return res.status(200).json(responseObject);
   } catch (err: unknown) {
     return next(err);
   }
 };
+
+
+
+// export const verifySupplierUsingOtp = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     // 1 : take otp out of request body
+//     let { otp } = req.body;
+
+//     // 2 : check if otp exists
+//     if (!otp) {
+//       throw new AppError("Otp not provided", 400);
+//     }
+
+//     // 3 : convert the otp into number
+//     otp = Number(otp);
+
+//     // 4 : find the document against the concerned otp
+//     const otpDoc = await OtpModel.findOne({ otp });
+
+//     // 6 : check if otp is expired or invalid
+//     if (!otpDoc || otpDoc.expiresAt < new Date()) {
+//       await OtpModel.findByIdAndDelete(otpDoc?._id);
+//       throw new AppError("OTP invalid or expired", 400);
+//     }
+
+//     // 7 : signup the client, create a document in user collection and send a jwt
+//     const { firstName, lastName, email, password, companyName, phoneNumber } =
+//       otpDoc;
+
+//     const salt = await bcrypt.genSalt(10);
+//     const hashedPassword = await bcrypt.hash(password, salt);
+
+//     let supplier = await UserModel.create({
+//       firstName,
+//       lastName: lastName || "",
+//       email,
+//       password: hashedPassword,
+//       userType: "supplier",
+//       companyName,
+//       phoneNumber,
+//     });
+
+//     console.log("supplier", supplier);
+
+//     supplier = supplier.toObject() as any;
+
+//     // 8 : preparation for jwt
+//     const jwtSecret: string = process.env.JWT_SECRET!;
+//     const jwtExpiresIn: number =
+//       Number(process.env.JWT_EXPIRES_IN) || 259200000;
+
+//     const signOptions: SignOptions = {
+//       expiresIn: jwtExpiresIn,
+//     };
+
+//     // 9 : sign token
+//     const token = jwt.sign(
+//       { id: String(supplier._id) },
+//       jwtSecret,
+//       signOptions
+//     );
+
+//     // 1 : once the user is created the otp document should be deleted
+//     await OtpModel.findByIdAndDelete(otpDoc?._id);
+
+//     // 12 : return response
+
+//     const responseObject: IResponseObject = {
+//       status: "success",
+//       message: "Supplier sign up success",
+//       data: {
+//         supplier,
+//         jwt: token,
+//       },
+//     };
+//     return res.status(200).json(responseObject);
+//   } catch (err: unknown) {
+//     return next(err);
+//   }
+// };
 
 // DIVIDER Client functions
 

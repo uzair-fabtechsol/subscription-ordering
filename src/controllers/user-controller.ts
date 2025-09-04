@@ -108,6 +108,69 @@ export const listPaymentMethods = async (
   }
 };
 
+
+// STEP 4: Remove a payment method
+export const removePaymentMethod = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { userId, paymentMethodId } = req.body;
+
+    const user = await UserModel.findById(userId);
+    if (!user || !user.stripeCustomerId) {
+      return res
+        .status(404)
+        .json({ message: "User or Stripe customer not found" });
+    }
+
+    // Detach the payment method from the customer
+    const detachedPaymentMethod = await stripe.paymentMethods.detach(paymentMethodId);
+
+    return res.json({
+      message: "Payment method removed successfully",
+      paymentMethod: detachedPaymentMethod,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+// STEP 5: Set a default payment method
+export const setDefaultPaymentMethod = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { userId, paymentMethodId } = req.body;
+
+    const user = await UserModel.findById(userId);
+    if (!user || !user.stripeCustomerId) {
+      return res
+        .status(404)
+        .json({ message: "User or Stripe customer not found" });
+    }
+
+    // Update customer's default payment method
+    const updatedCustomer = await stripe.customers.update(user.stripeCustomerId, {
+      invoice_settings: {
+        default_payment_method: paymentMethodId,
+      },
+    });
+
+    return res.json({
+      message: "Default payment method updated successfully",
+      customer: updatedCustomer,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
 export const convertClientToSupplier = async (
   req: CustomRequest,
   res: Response,

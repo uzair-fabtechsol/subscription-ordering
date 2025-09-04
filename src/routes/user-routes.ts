@@ -17,6 +17,8 @@ import {
   getSupplierOnId,
   getSupplierPersonalInfo,
   listPaymentMethods,
+  removePaymentMethod,
+  setDefaultPaymentMethod,
   updateClientOnId,
   updateSupplierOnId,
 } from "@/controllers/user-controller";
@@ -29,7 +31,11 @@ const router: Router = express.Router();
 /// PAYMENT METHODS (CLIENT ONLY)
 router.post("/client/create-setup-intent", createSetupIntent);
 router.post("/client/attach-payment-method", attachPaymentMethod);
+router.post("/client/detatch-payment-method", listPaymentMethods);
 router.post("/client/list-payment-methods", listPaymentMethods);
+router.post("/client/remove-payment-method", listPaymentMethods);
+
+
 router.patch(
   "/convert-client-to-supplier",
   restrictedTo(["client"]) as unknown as RequestHandler,
