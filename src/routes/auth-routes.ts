@@ -19,9 +19,9 @@ const router: Router = express.Router();
 
 // DIVIDER supplier  routes
 router.post("/supplier/signup", signupSupplier);
+router.post("/supplier/verify", verifySupplierUsingOtp);
 router.get("/supplier/curr", getCurrSupplierOrCLient);
 router.post("/supplier/signin", signinSupplierOrClient);
-router.post("/supplier/verify", verifySupplierUsingOtp);
 
 // DIVIDER client  routes
 router.post("/client/signup", signupClient);
@@ -60,9 +60,8 @@ router.get(
   sendJwtGoogle as RequestHandler
 );
 
-// DIVIDER
+// DIVIDER common routes
 router.post("/forgot-password", forgotPassword);
-
 router.patch("/reset-password", resetPassword);
 
 export default router;
