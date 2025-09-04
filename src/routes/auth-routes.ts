@@ -20,12 +20,12 @@ const router: Router = express.Router();
 // DIVIDER supplier  routes
 router.post("/supplier/signup", signupSupplier);
 router.post("/supplier/verify", verifySupplierUsingOtp);
-router.post("/supplier/resend-opt", signupSupplier);
+router.post("/supplier/resend-otp", signupSupplier);
 
 // DIVIDER client  routes
 router.post("/client/signup", signupClient);
 router.post("/client/verify", verifyClientUsingOtp);
-router.post("/supplier/resend-opt", signupClient);
+router.post("/client/resend-otp", signupClient);
 
 // DIVIDER admin routes
 router.post("/admin/signin", adminSignin);
