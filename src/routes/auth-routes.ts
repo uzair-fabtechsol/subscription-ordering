@@ -20,14 +20,12 @@ const router: Router = express.Router();
 // DIVIDER supplier  routes
 router.post("/supplier/signup", signupSupplier);
 router.post("/supplier/verify", verifySupplierUsingOtp);
-router.get("/supplier/curr", getCurrSupplierOrCLient);
-router.post("/supplier/signin", signinSupplierOrClient);
+router.post("/supplier/resend-opt", signupSupplier);
 
 // DIVIDER client  routes
 router.post("/client/signup", signupClient);
-router.get("/client/curr", getCurrSupplierOrCLient);
-router.post("/client/signin", signinSupplierOrClient);
 router.post("/client/verify", verifyClientUsingOtp);
+router.post("/supplier/resend-opt", signupClient);
 
 // DIVIDER admin routes
 router.post("/admin/signin", adminSignin);
@@ -63,5 +61,7 @@ router.get(
 // DIVIDER common routes
 router.post("/forgot-password", forgotPassword);
 router.patch("/reset-password", resetPassword);
+router.post("/signin", signinSupplierOrClient);
+router.get("/curr", getCurrSupplierOrCLient);
 
 export default router;
