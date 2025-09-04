@@ -13,7 +13,7 @@ import { clearOtpCron } from "./cron/clear-otp-cron";
 import passport from "./utils/passport";
 import routes from "./routes/index"; // 👈 import central routes file
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const app = express();
 
