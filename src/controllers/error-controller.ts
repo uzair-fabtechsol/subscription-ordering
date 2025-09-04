@@ -5,7 +5,7 @@ import { AppError } from "../utils/AppError";
 import { MongoServerError } from "mongodb";
 import dotenv from "dotenv";
 import { IResponseObject } from "@/types/response-object-types";
-dotenv.config();
+dotenv.config({ quiet: true });
 
 export const globalErrorHandler = (
   err: unknown,

@@ -1,24 +1,18 @@
-import jwt, { SignOptions } from "jsonwebtoken";
-
-import crypto from "crypto";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import { UserModel } from "@/models/auth-model";
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "@/utils/AppError";
-import { generateOTP } from "@/utils/generate-otp";
-import { OtpModel } from "@/models/otp-model";
-import { sendMail, sendResetPasswordMail } from "@/utils/email";
 import { UserType } from "@/types/auth-types";
 import { CustomRequest } from "@/types/modified-requests-types";
 import { IResponseObject } from "@/types/response-object-types";
 import mongoose from "mongoose";
-import { createStripeCustomer } from "@/utils/stripe-util-hub";
 import Stripe from "stripe";
+
+dotenv.config({ quiet: true });
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
 const stripe = new Stripe(STRIPE_SECRET_KEY);
-dotenv.config();
 
 // DIVIDER Client route handlers
 

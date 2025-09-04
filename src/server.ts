@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import app from "./app";
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const DB_URI = process.env.DB_CONNECTION_STRING as string;
 const PORT = Number(process.env.PORT || 4000);
@@ -21,7 +21,10 @@ function shutdown(server: import("http").Server, code: number, reason: string) {
  * Global error handlers (before anything else)
  */
 process.on("uncaughtException", (err: unknown) => {
-  console.error("❌ Uncaught Exception:", err instanceof Error ? err.stack : err);
+  console.error(
+    "❌ Uncaught Exception:",
+    err instanceof Error ? err.stack : err
+  );
   process.exit(1);
 });
 
@@ -60,5 +63,3 @@ if (require.main === module) {
  * Export app for Vercel / serverless / testing
  */
 export default app;
-
-

@@ -17,7 +17,7 @@ import { createStripeCustomer } from "@/utils/stripe-util-hub";
 import Stripe from "stripe";
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
 const stripe = new Stripe(STRIPE_SECRET_KEY);
-dotenv.config();
+dotenv.config({ quiet: true });
 
 // DIVIDER Supplier functions
 

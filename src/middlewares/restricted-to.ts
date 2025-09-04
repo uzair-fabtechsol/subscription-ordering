@@ -6,7 +6,6 @@ import { AppError } from "@/utils/AppError";
 import { NextFunction } from "express";
 import { Types } from "mongoose";
 
-// FUNCTION
 export const restrictedTo =
   (allowedUserTypes: string[]) =>
   async (req: CustomRequest, res: Response, next: NextFunction) => {
@@ -35,9 +34,6 @@ export const restrictedTo =
 
       // 5 : get user from DB
       const user = await UserModel.findById(userId);
-
-      console.log(allowedUserTypes);
-      console.log(user);
 
       if (!user) {
         return next(

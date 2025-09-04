@@ -1,7 +1,7 @@
 import Stripe from "stripe";
-import dotenv from 'dotenv'
-dotenv.config();
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY||'';
+import dotenv from "dotenv";
+dotenv.config({ quiet: true });
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
 const stripe = new Stripe(STRIPE_SECRET_KEY);
 
 /**
@@ -19,14 +19,12 @@ export async function createStripeCustomer(
   });
 }
 
-
 // ***************************************Frontend Flow (React + Stripe.js)******************************************
 
 // Create SetupIntent
 
 // const { data } = await axios.post("/api/payment/create-setup-intent", { userId });
 // const clientSecret = data.clientSecret;
-
 
 // Confirm Card Setup
 

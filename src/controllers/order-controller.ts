@@ -13,7 +13,8 @@ import {
   validateUserWithRole,
   validateProduct,
   ensureDeliveryFields,
-} from "@/utils/helperFunctions";
+} from "@/utils/helper-functions";
+import { IResponseObject } from "@/types/response-object-types";
 
 // CREATE
 export const createOrder = async (
@@ -22,6 +23,7 @@ export const createOrder = async (
   next: NextFunction
 ) => {
   try {
+    // 1 : take the necessary fields out
     const {
       product,
       customer,
@@ -44,6 +46,7 @@ export const createOrder = async (
       status?: "pending" | "delivered" | "canceled";
     };
 
+    // 2 : check for necessary fields
     if (!product) return next(new AppError("product is required", 400));
     if (!customer) return next(new AppError("customer is required", 400));
     if (!supplier) return next(new AppError("supplier is required", 400));
@@ -54,14 +57,16 @@ export const createOrder = async (
 
     // ensureDeliveryFields(deliveryInterval, deliveryDay);
 
+    // 3 : check if the customer id and supplier id
     if (customer === supplier)
       return next(
         new AppError("customer and supplier cannot be the same user", 400)
       );
 
-    await validateProduct(product);
-    await validateUserWithRole(customer, UserType.CLIENT, "Customer");
-    await validateUserWithRole(supplier, UserType.SUPPLIER, "Supplier");
+    // 4 : validation
+    await validateProduct(product); // check if the product (which is id) exists the client is trying to buy
+    await validateUserWithRole(customer, UserType.CLIENT, "Customer"); // validate the client who is ordering like status active or not etc
+    await validateUserWithRole(supplier, UserType.SUPPLIER, "Supplier"); // same
 
     let nextDate: Date;
     if (nextDeliveryDate) {
@@ -94,7 +99,15 @@ export const createOrder = async (
       .populate({ path: "customer", select: "firstName lastName email" })
       .populate({ path: "supplier", select: "firstName lastName email" });
 
-    return res.status(201).json({ status: "success", data: populated });
+    const responseObject: IResponseObject = {
+      status: "success",
+      message: "",
+      data: {
+        order: populated,
+      },
+    };
+
+    return res.status(201).json(responseObject);
   } catch (err) {
     return next(err);
   }
