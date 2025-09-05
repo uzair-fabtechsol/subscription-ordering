@@ -19,7 +19,7 @@ const stripe = new Stripe(STRIPE_SECRET_KEY);
 
 // (client/customer ONLY) payment method attach
 // STEP 1: Create SetupIntent (frontend will use client_secret)
-export const createSetupIntent = async (
+const createSetupIntent = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -46,7 +46,7 @@ export const createSetupIntent = async (
 };
 
 // STEP 2: Attach Payment Method after frontend confirms SetupIntent
-export const attachPaymentMethod = async (
+const attachPaymentMethod = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -80,7 +80,7 @@ export const attachPaymentMethod = async (
 };
 
 // STEP 3: List payment methods (cards) for a customer
-export const listPaymentMethods = async (
+const listPaymentMethods = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -172,7 +172,7 @@ export const setDefaultPaymentMethod = async (
 };
 
 
-export const convertClientToSupplier = async (
+ const convertClientToSupplier = async (
   req: CustomRequest,
   res: Response,
   next: NextFunction
@@ -211,7 +211,7 @@ export const convertClientToSupplier = async (
   }
 };
 
-export const getClientPersonalInfo = async (
+const getClientPersonalInfo = async (
   req: CustomRequest,
   res: Response,
   next: NextFunction
@@ -236,7 +236,7 @@ export const getClientPersonalInfo = async (
   }
 };
 
-export const editClientPersonalInfo = async (
+const editClientPersonalInfo = async (
   req: CustomRequest,
   res: Response,
   next: NextFunction
@@ -275,7 +275,7 @@ export const editClientPersonalInfo = async (
 
 // DIVIDER Supplier route handlers
 
-export const getSupplierPersonalInfo = async (
+const getSupplierPersonalInfo = async (
   req: CustomRequest,
   res: Response,
   next: NextFunction
@@ -300,7 +300,7 @@ export const getSupplierPersonalInfo = async (
   }
 };
 
-export const editSupplierPersonalInfo = async (
+const editSupplierPersonalInfo = async (
   req: CustomRequest,
   res: Response,
   next: NextFunction
@@ -338,7 +338,7 @@ export const editSupplierPersonalInfo = async (
     return next(err);
   }
 };
-export const checkOnboardingStatus = async (req: Request, res: Response) => {
+ const checkOnboardingStatus = async (req: Request, res: Response) => {
   try {
     const { accountId } = req.params;
 
@@ -377,7 +377,7 @@ return res.json({
   }
 };
 
-export const createOnboardingLink = async (req: Request, res: Response) => {
+ const createOnboardingLink = async (req: Request, res: Response) => {
   try {
     const { accountId } = req.params;
 
@@ -421,7 +421,7 @@ export const createOnboardingLink = async (req: Request, res: Response) => {
 
 // DIVIDER Admin routes handlers
 
-export const getAllSuppliers = async (
+const getAllSuppliers = async (
   req: CustomRequest,
   res: Response,
   next: NextFunction
@@ -530,7 +530,7 @@ export const getAllSuppliers = async (
   }
 };
 
-export const getSupplierOnId = async (
+const getSupplierOnId = async (
   req: CustomRequest,
   res: Response,
   next: NextFunction
@@ -567,7 +567,7 @@ export const getSupplierOnId = async (
   }
 };
 
-export const updateSupplierOnId = async (
+const updateSupplierOnId = async (
   req: CustomRequest,
   res: Response,
   next: NextFunction
@@ -614,7 +614,7 @@ export const updateSupplierOnId = async (
   }
 };
 
-export const deleteSupplierOnId = async (
+const deleteSupplierOnId = async (
   req: CustomRequest,
   res: Response,
   next: NextFunction
@@ -650,7 +650,7 @@ export const deleteSupplierOnId = async (
   }
 };
 
-export const getAllClients = async (
+const getAllClients = async (
   req: CustomRequest,
   res: Response,
   next: NextFunction
@@ -757,7 +757,7 @@ export const getAllClients = async (
   }
 };
 
-export const getClientOnId = async (
+const getClientOnId = async (
   req: CustomRequest,
   res: Response,
   next: NextFunction
@@ -801,7 +801,7 @@ export const getClientOnId = async (
   }
 };
 
-export const updateClientOnId = async (
+const updateClientOnId = async (
   req: CustomRequest,
   res: Response,
   next: NextFunction
@@ -867,7 +867,7 @@ export const updateClientOnId = async (
   }
 };
 
-export const deleteClientOnId = async (
+const deleteClientOnId = async (
   req: CustomRequest,
   res: Response,
   next: NextFunction
@@ -912,7 +912,7 @@ export const deleteClientOnId = async (
   }
 };
 
-export const getAdminPersonalInfo = async (
+const getAdminPersonalInfo = async (
   req: CustomRequest,
   res: Response,
   next: NextFunction
@@ -937,7 +937,7 @@ export const getAdminPersonalInfo = async (
   }
 };
 
-export const editAdminPersonalInfo = async (
+const editAdminPersonalInfo = async (
   req: CustomRequest,
   res: Response,
   next: NextFunction
@@ -976,7 +976,7 @@ export const editAdminPersonalInfo = async (
 
 // DIVIDER Common Route handlers
 
-export const editUserSecurityCredentials = async (
+const editUserSecurityCredentials = async (
   req: CustomRequest,
   res: Response,
   next: NextFunction
@@ -1015,6 +1015,30 @@ export const editUserSecurityCredentials = async (
     // Edge Case 4: Handle unexpected DB errors
     return next(err);
   }
+};
+
+export {
+  createSetupIntent,
+  attachPaymentMethod,
+  listPaymentMethods,
+  convertClientToSupplier,
+  getClientPersonalInfo,
+  editClientPersonalInfo,
+  getSupplierPersonalInfo,
+  editSupplierPersonalInfo,
+  getAllSuppliers,
+  getSupplierOnId,
+  updateSupplierOnId,
+  deleteSupplierOnId,
+  getAllClients,
+  getClientOnId,
+  updateClientOnId,
+  deleteClientOnId,
+  getAdminPersonalInfo,
+  editAdminPersonalInfo,
+  editUserSecurityCredentials,
+  checkOnboardingStatus,
+  createOnboardingLink
 };
 
 

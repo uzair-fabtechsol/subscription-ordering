@@ -36,9 +36,7 @@ const userSchema = new Schema<IUser>(
     },
     phoneNumber: {
       type: String,
-      required: function () {
-        return this.userType === UserType.SUPPLIER;
-      },
+      default: "",
     },
     userType: {
       type: String,
@@ -58,8 +56,12 @@ const userSchema = new Schema<IUser>(
       required: [true, "User status is required"],
       default: UserStatus.ACTIVE,
     },
+    supplierAddress: {
+      type: String,
+      default: "",
+    },
     stripeCustomerId: { type: String, default: null }, // For platform customers
-    stripeAccountId: { type: String, default: null },  // For suppliers/sellers
+    stripeAccountId: { type: String, default: null }, // For suppliers/sellers
     passwordResetToken: {
       type: String,
       default: null,

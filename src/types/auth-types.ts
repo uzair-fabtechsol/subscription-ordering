@@ -31,6 +31,8 @@ export interface IUser extends Document {
   status: UserStatus;
   passwordResetToken: string | null;
   passwordResetExpires: Date | null;
+  supplierAddress: string;
+
   // Stripe fields
   stripeCustomerId?: string | null;
   stripeAccountId?: string | null;
