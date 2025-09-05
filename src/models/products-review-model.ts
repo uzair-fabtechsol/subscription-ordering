@@ -1,29 +1,28 @@
-import { IProductReview } from "@/types/products-reviews-type";
+import { IProductReview } from "@/types/products-reviews-types";
 import mongoose, { Schema, Document } from "mongoose";
 
-const reviewSchema = new Schema <IProductReview>({
+const reviewSchema = new Schema<IProductReview>(
+  {
     user: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
     product: {
-        type: Schema.Types.ObjectId,
-        ref: "Product",
-        required: true,
+      type: Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
     },
     rating: {
-        type: Number,
-        required: true,
+      type: Number,
+      required: true,
     },
     comment: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
-  
-
-}
-,  {
+  },
+  {
     timestamps: true,
     toJSON: {
       transform(doc, ret) {

@@ -1,10 +1,9 @@
-import { ISupportTicket } from "@/types/support-ticket";
+import { ISupportTicket } from "@/types/support-ticket-types";
 import mongoose, { Schema, Document } from "mongoose";
 
-
 const userSchema = new Schema<ISupportTicket>(
-{
-      name: {
+  {
+    name: {
       type: String,
       trim: true,
     },
@@ -21,12 +20,12 @@ const userSchema = new Schema<ISupportTicket>(
       enum: ["pending", "resolved", "rejected"],
       default: "pending",
     },
-   user:{
+    user: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
     },
-      attachments: [
+    attachments: [
       {
         url: {
           type: String,
@@ -43,7 +42,7 @@ const userSchema = new Schema<ISupportTicket>(
       },
     ],
   },
-   {
+  {
     timestamps: true,
     toJSON: {
       transform(doc, ret) {
@@ -54,6 +53,7 @@ const userSchema = new Schema<ISupportTicket>(
   }
 );
 
-export const SupportTicketModel = mongoose.model<ISupportTicket>("SupportTicket", userSchema);
-
-
+export const SupportTicketModel = mongoose.model<ISupportTicket>(
+  "SupportTicket",
+  userSchema
+);
