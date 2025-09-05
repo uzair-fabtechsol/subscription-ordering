@@ -9,6 +9,7 @@ import {
   verifySupplierUsingOtp,
   forgotPassword,
   resetPassword,
+  googleAuth,
 } from "@/controllers/auth-controller";
 import express, { RequestHandler, Router } from "express";
 import passport from "../utils/passport";
@@ -31,23 +32,7 @@ router.post("/client/resend-otp", signupClient);
 router.post("/admin/signin", adminSignin);
 
 // DIVIDER google auth routes
-router.get("/google", (req, res, next) => {
-  // stash userType temporarily in the state param
-  const userType = req.query.userType as string;
-  const companyName = req.query.companyName as string;
-  const phoneNumber = req.query.phoneNumber as string;
-
-  const state =
-    userType === "supplier"
-      ? `userType=supplier,companyName=${companyName},phoneNumber=${phoneNumber}`
-      : `userType=client`;
-
-  passport.authenticate("google", {
-    scope: ["profile", "email"],
-    session: false,
-    state,
-  })(req, res, next);
-});
+router.get("/google", googleAuth);
 
 router.get(
   "/google/callback",

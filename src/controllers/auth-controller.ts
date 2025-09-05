@@ -4,17 +4,17 @@ import crypto from "crypto";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import { UserModel } from "@/models/auth-model";
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, RequestHandler, Response } from "express";
 import { AppError } from "@/utils/AppError";
 import { generateOTP } from "@/utils/generate-otp";
 import { OtpModel } from "@/models/otp-model";
 import { sendMail, sendResetPasswordMail } from "@/utils/email";
-import { UserType } from "@/types/auth-types";
 import { CustomRequest } from "@/types/modified-requests-types";
 import { IResponseObject } from "@/types/response-object-types";
-import mongoose from "mongoose";
 import { createStripeCustomer } from "@/utils/stripe-util-hub";
 import Stripe from "stripe";
+import passport from "../utils/passport";
+
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
 const stripe = new Stripe(STRIPE_SECRET_KEY);
 dotenv.config({ quiet: true });
@@ -205,7 +205,6 @@ export const signupClient = async (
   }
 };
 
-// FUNCTION
 export const verifyClientUsingOtp = async (
   req: Request,
   res: Response,
@@ -350,7 +349,24 @@ export const adminSignin = async (
 
 // DIVIDER Google functions
 
-// FUNCTION
+export const googleAuth = (req: Request, res: Response, next: NextFunction) => {
+  // stash userType temporarily in the state param
+  const userType = req.query.userType as string;
+  const companyName = req.query.companyName as string;
+  const phoneNumber = req.query.phoneNumber as string;
+
+  const state =
+    userType === "supplier"
+      ? `userType=supplier,companyName=${companyName},phoneNumber=${phoneNumber}`
+      : `userType=client`;
+
+  return passport.authenticate("google", {
+    scope: ["profile", "email"],
+    session: false,
+    state,
+  })(req, res, next);
+};
+
 export const sendJwtGoogle = (
   req: CustomRequest,
   res: Response,
@@ -381,15 +397,14 @@ export const sendJwtGoogle = (
         jwt: token,
       },
     };
-    return res.status(200).json(responseObject);
+    res.status(200).json(responseObject);
   } catch (err: unknown) {
-    return next(err);
+    next(err);
   }
 };
 
 // DIVIDER Common functions
 
-// FUNCTION
 export const getCurrSupplierOrCLient = async (
   req: Request,
   res: Response,
@@ -441,7 +456,6 @@ export const getCurrSupplierOrCLient = async (
   }
 };
 
-// FUNCTION
 export const signinSupplierOrClient = async (
   req: Request,
   res: Response,
@@ -509,7 +523,7 @@ export const signinSupplierOrClient = async (
   }
 };
 
-// FUNCTION this sends the reset url to email
+//  this sends the reset url to email
 export const forgotPassword = async (
   req: Request,
   res: Response,
