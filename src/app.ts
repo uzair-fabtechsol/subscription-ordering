@@ -11,7 +11,8 @@ import mongoSanitize from "mongo-sanitize";
 import { globalErrorHandler } from "./controllers/error-controller";
 import { clearOtpCron } from "./cron/clear-otp-cron";
 import passport from "./utils/passport";
-import routes from "./routes/index"; // 👈 import central routes file
+import routes from "./routes/index"; // 👈 central routes
+import webhookRoutes from "./routes/webhook-routes"; // 👈 your webhook routes
 
 dotenv.config({ quiet: true });
 
@@ -20,16 +21,19 @@ const app = express();
 // http headers security
 app.use(helmet());
 
-// body parsing
+// ⚡ 1. Mount webhook routes first (raw body needed)
+app.use("/api/webhooks", webhookRoutes);
+
+// ⚡ 2. Normal body parsing for the rest
 app.use(express.json({ limit: "10kb" }));
 
 // cookie parser
 app.use(cookieParser());
 
-// parameter pollution to remove duplicate query params
+// parameter pollution protection
 app.use(hpp({}));
 
-// setting cors
+// cors
 app.use(
   cors({
     origin: process.env.CLIENT_URL,
@@ -39,12 +43,12 @@ app.use(
 
 app.use(passport.initialize());
 
-// logger in dev mode
+// logger
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-// limiting request from same api
+// rate limiter
 const limiter = rateLimit({
   max: 100,
   windowMs: 30 * 60 * 1000,
@@ -57,7 +61,7 @@ app.set("trust proxy", true);
 
 clearOtpCron();
 
-// routes
+// 3. Normal API routes
 app.use("/api", routes);
 
 // Handle unknown routes (404)
@@ -68,9 +72,88 @@ app.use((req: Request, res: Response) => {
   });
 });
 
-// handling errors globally
+// Global error handler
 app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
   globalErrorHandler(err, req, res);
 });
 
 export default app;
+
+
+
+// /* eslint-disable */
+// import express, { Request, Response, NextFunction } from "express";
+// import morgan from "morgan";
+// import dotenv from "dotenv";
+// import cors from "cors";
+// import cookieParser from "cookie-parser";
+// import rateLimit from "express-rate-limit";
+// import helmet from "helmet";
+// import hpp from "hpp";
+// import mongoSanitize from "mongo-sanitize";
+// import { globalErrorHandler } from "./controllers/error-controller";
+// import { clearOtpCron } from "./cron/clear-otp-cron";
+// import passport from "./utils/passport";
+// import routes from "./routes/index"; // 👈 import central routes file
+
+// dotenv.config({ quiet: true });
+
+// const app = express();
+
+// // http headers security
+// app.use(helmet());
+
+// // body parsing
+// app.use(express.json({ limit: "10kb" }));
+
+// // cookie parser
+// app.use(cookieParser());
+
+// // parameter pollution to remove duplicate query params
+// app.use(hpp({}));
+
+// // setting cors
+// app.use(
+//   cors({
+//     origin: process.env.CLIENT_URL,
+//     credentials: true,
+//   })
+// );
+
+// app.use(passport.initialize());
+
+// // logger in dev mode
+// if (process.env.NODE_ENV === "development") {
+//   app.use(morgan("dev"));
+// }
+
+// // limiting request from same api
+// const limiter = rateLimit({
+//   max: 100,
+//   windowMs: 30 * 60 * 1000,
+//   message: "Too many requests.",
+//   validate: { trustProxy: false },
+// });
+// app.use(limiter);
+
+// app.set("trust proxy", true);
+
+// clearOtpCron();
+
+// // routes
+// app.use("/api", routes);
+
+// // Handle unknown routes (404)
+// app.use((req: Request, res: Response) => {
+//   res.status(404).json({
+//     status: "fail",
+//     message: `Cannot find ${req.originalUrl} on this server.`,
+//   });
+// });
+
+// // handling errors globally
+// app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
+//   globalErrorHandler(err, req, res);
+// });
+
+// export default app;

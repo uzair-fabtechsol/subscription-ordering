@@ -8,6 +8,7 @@ import { CustomRequest } from "@/types/modified-requests-types";
 import { IResponseObject } from "@/types/response-object-types";
 import mongoose from "mongoose";
 import Stripe from "stripe";
+import { generateOnboardingLink,isOnboardingComplete } from "@/utils/stripe-util-hub";
 
 dotenv.config({ quiet: true });
 
@@ -335,6 +336,86 @@ export const editSupplierPersonalInfo = async (
   } catch (err: unknown) {
     // Edge Case 4: Handle unexpected DB errors
     return next(err);
+  }
+};
+export const checkOnboardingStatus = async (req: Request, res: Response) => {
+  try {
+    const { accountId } = req.params;
+
+    if (!accountId) {
+      return res.status(400).json({ success: false, message: "Stripe accountId is required" });
+    }
+
+    // Fetch account from Stripe
+    const account = (await stripe.accounts.retrieve(accountId)) as Stripe.Account;
+
+// Determine onboarding completion
+const isOnboardingComplete =
+  account.charges_enabled &&
+  account.payouts_enabled &&
+  (!account.requirements?.currently_due ||
+    account.requirements.currently_due.length === 0);
+
+return res.json({
+  success: true,
+  accountId,
+  onboardingComplete: isOnboardingComplete,
+  details: {
+    chargesEnabled: account.charges_enabled,
+    payoutsEnabled: account.payouts_enabled,
+    disabledReason: (account as any).disabled_reason || null,
+    requirementsCurrentlyDue: account.requirements?.currently_due || [],
+  },
+});
+  } catch (error: any) {
+    console.error("Error checking onboarding status:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Error checking onboarding status",
+      error: error.message,
+    });
+  }
+};
+
+export const createOnboardingLink = async (req: Request, res: Response) => {
+  try {
+    const { accountId } = req.params;
+
+    if (!accountId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Stripe accountId is required" });
+    }
+
+    // Retrieve the account from Stripe
+    const account = (await stripe.accounts.retrieve(accountId)) as Stripe.Account;
+
+    // Check onboarding status
+    if (isOnboardingComplete(account)) {
+      return res.json({
+        success: true,
+        accountId,
+        onboardingComplete: true,
+        message: "Onboarding is already complete",
+      });
+    }
+
+    // If not complete → generate onboarding link
+    const link = await generateOnboardingLink(accountId);
+
+    return res.json({
+      success: true,
+      accountId,
+      onboardingComplete: false,
+      onboardingLink: link,
+    });
+  } catch (error: any) {
+    console.error("Error generating onboarding link:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to check onboarding status or generate link",
+      error: error.message,
+    });
   }
 };
 
@@ -935,3 +1016,5 @@ export const editUserSecurityCredentials = async (
     return next(err);
   }
 };
+
+

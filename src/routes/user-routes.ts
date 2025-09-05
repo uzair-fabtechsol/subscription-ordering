@@ -21,6 +21,8 @@ import {
   setDefaultPaymentMethod,
   updateClientOnId,
   updateSupplierOnId,
+  checkOnboardingStatus,
+  createOnboardingLink
 } from "@/controllers/user-controller";
 import { restrictedTo } from "@/middlewares/restricted-to";
 
@@ -34,6 +36,7 @@ router.post("/client/attach-payment-method", attachPaymentMethod);
 router.post("/client/detatch-payment-method", listPaymentMethods);
 router.post("/client/list-payment-methods", listPaymentMethods);
 router.post("/client/remove-payment-method", listPaymentMethods);
+/////////////////////////////////////////////////////////////////////////
 
 
 router.patch(
@@ -55,6 +58,12 @@ router.patch(
 );
 
 // DIVIDER Supplier routes
+
+router.get("/supplier/onboarding-status/:accountId", checkOnboardingStatus);
+router.get("/supplier/onboarding-link/:accountId", createOnboardingLink);
+
+// createOnboardingLink
+
 
 router.get(
   "/supplier/personal-information",
@@ -135,3 +144,5 @@ router.patch(
   restrictedTo(["admin", "client", "supplier"]) as unknown as RequestHandler,
   editUserSecurityCredentials as RequestHandler
 );
+
+export default router;

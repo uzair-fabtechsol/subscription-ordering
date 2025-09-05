@@ -51,7 +51,7 @@ export async function generateOnboardingLink(accountId: string): Promise<string>
 }
 
 /**
- * Check if a Connect account is fully onboarded and payouts are enabled
+ * Check if a Connect account status onboarded and payouts 
  */
 export async function checkAccountStatus(accountId: string) {
   const account = await stripe.accounts.retrieve(accountId);
@@ -62,6 +62,18 @@ export async function checkAccountStatus(accountId: string) {
     detailsSubmitted: account.details_submitted,
   };
 }
+/**
+ * Check if a Connect account is fully onboarded and payouts are enabled
+ */
+export function isOnboardingComplete(account: Stripe.Account): boolean {
+  return (
+    account.charges_enabled &&
+    account.payouts_enabled &&
+    (!account.requirements?.currently_due ||
+      account.requirements.currently_due.length === 0)
+  );
+}
+
 
 // ***************************************Frontend Flow (React + Stripe.js)******************************************
 
