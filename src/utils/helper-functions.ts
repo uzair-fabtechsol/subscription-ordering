@@ -5,6 +5,7 @@ import { ProductModel } from "@/models/product-model";
 import { UserModel } from "@/models/auth-model";
 import { AppError } from "@/utils/AppError";
 import { UserStatus, UserType } from "@/types/auth-types";
+import dayjs from "dayjs";
 
 const isValidObjectId = (id?: string): boolean =>
   !!id && Types.ObjectId.isValid(id);
@@ -87,6 +88,22 @@ const ensureDeliveryFields = (
     throw new AppError("Invalid deliveryDay. Allowed: 1..7 (Mon..Sun)", 400);
 };
 
+
+function computeFirstDeliveryDate(today: Date, deliveryDay: number): Date {
+  const jsTarget = deliveryDay % 7; // maps 7 -> 0 (Sunday), 1 -> 1 (Monday), etc
+  const todayJs = dayjs(today).day();
+  
+  
+  // If today is the target day, today's date should count.
+  if (todayJs === jsTarget) return dayjs(today).startOf("day").toDate();
+  
+  
+  // Otherwise find the next occurrence (0..6)
+  let diff = (jsTarget - todayJs + 7) % 7;
+  if (diff === 0) diff = 7; // defensive — shouldn't happen because equal case handled above
+  return dayjs(today).add(diff, "day").startOf("day").toDate();
+  }
+
 export {
   isValidObjectId,
   weekdayFromNumber,
@@ -95,4 +112,5 @@ export {
   validateUserWithRole,
   validateProduct,
   ensureDeliveryFields,
+  computeFirstDeliveryDate
 };

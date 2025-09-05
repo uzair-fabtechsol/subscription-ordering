@@ -10,7 +10,7 @@ import mongoose from "mongoose";
 import Stripe from "stripe";
 import { generateOnboardingLink,isOnboardingComplete } from "@/utils/stripe-util-hub";
 
-dotenv.config({ quiet: true });
+dotenv.config();
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
 const stripe = new Stripe(STRIPE_SECRET_KEY);

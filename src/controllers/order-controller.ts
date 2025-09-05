@@ -13,9 +13,13 @@ import {
   validateUserWithRole,
   validateProduct,
   ensureDeliveryFields,
+  computeFirstDeliveryDate
 } from "@/utils/helper-functions";
 import { IResponseObject } from "@/types/response-object-types";
+import Stripe from "stripe";
 
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
+const stripe = new Stripe(STRIPE_SECRET_KEY);
 // CREATE
 export const createOrder = async (
   req: Request,
@@ -113,7 +117,148 @@ export const createOrder = async (
   }
 };
 
+
+// export const createOrder = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     const {
+//       product,
+//       customer,
+//       supplier,
+//       quantity,
+//       price,
+//       deliveryInterval,
+//       deliveryDay,
+//       currency = "usd",
+//     } = req.body;
+
+//     // 1. Create order document in DB
+//     const order = await OrderModel.create({
+//       product,
+//       customer,
+//       supplier,
+//       quantity,
+//       price,
+//       deliveryInterval,
+//       deliveryDay,
+//     });
+
+//     // 2. Fetch customer from DB
+//     const customerDoc = await UserModel.findById(customer);
+//     if (!customerDoc || !customerDoc.stripeCustomerId) {
+//       throw new Error("Customer not connected to Stripe");
+//     }
+
+//     let invoice: Stripe.Invoice | null = null;
+
+//     try {
+//       // 3. Create invoice
+//       invoice = await stripe.invoices.create({
+//         customer: customerDoc.stripeCustomerId,
+//         auto_advance: true,
+//         collection_method: "charge_automatically",
+//         metadata: { orderId: (order._id as string).toString() },
+//       });
+
+//       // 4. Finalize invoice
+//       invoice = await stripe.invoices.finalizeInvoice((invoice.id as string));
+
+//       // 5. Attempt to pay invoice
+//       try {
+//         invoice = await stripe.invoices.pay((invoice.id as string));
+//       } catch (payErr) {
+//         console.error("Invoice payment failed:", payErr);
+//       }
+//     } catch (stripeErr) {
+//       console.error("Stripe invoicing error:", stripeErr);
+//     }
+
+//     // 6. Calculate delivery dates
+//     const firstDelivery = new Date(); // replace with your logic
+//     const secondDelivery = new Date(firstDelivery);
+//     secondDelivery.setDate(
+//       firstDelivery.getDate() + deliveryInterval * 7
+//     );
+
+//     // 7. Create subscription for future deliveries
+//     let subscription: Stripe.Subscription | null = null;
+//     try {
+//       const productDoc = await ProductModel.findById(product).select("name");
+
+//       // subscription = await stripe.subscriptions.create({
+//       //   customer: customerDoc.stripeCustomerId,
+//       //   items: [
+//       //     {
+//       //       price_data: {
+//       //         currency,
+//       //         product_data : {
+//       //           name: productDoc?.name ?? `Product ${product}`,
+//       //           // metadata: { mongoProductId: product.toString() },
+//       //         } as any, 
+//       //         unit_amount: Math.round(price * 100), // cents
+//       //         recurring: {
+//       //           interval: "week",
+//       //           interval_count: deliveryInterval,
+//       //         },
+//       //       },
+//       //       quantity,
+//       //     },
+//       //   ],
+//       //   billing_cycle_anchor: Math.floor(secondDelivery.getTime() / 1000),
+//       //   proration_behavior: "none",
+//       //   collection_method: "charge_automatically",
+//       //   metadata: { orderId: (order._id as string).toString() },
+//       // });
+
+
+//     } catch (stripeSubErr) {
+//       console.error("Stripe subscription creation error:", stripeSubErr);
+//     }
+
+//     // 8. Save stripe IDs on order
+//     try {
+//       await OrderModel.findByIdAndUpdate(
+//         order._id,
+//         {
+//           ...(invoice ? { stripeInvoiceId: invoice.id } : {}),
+//           ...(subscription ? { stripeSubscriptionId: subscription.id } : {}),
+//         },
+//         { new: true }
+//       );
+//     } catch (updateErr) {
+//       console.warn("Could not persist stripe ids on order:", updateErr);
+//     }
+
+//     // 9. Populate final response
+//     const finalPopulated = await OrderModel.findById(order._id)
+//       .populate({ path: "product", select: "name" })
+//       .populate({ path: "customer", select: "firstName lastName email" })
+//       .populate({ path: "supplier", select: "firstName lastName email" });
+
+//     const responseObject = {
+//       status: "success",
+//       message: "Order created (invoice/subscription attempted).",
+//       data: {
+//         order: finalPopulated,
+//         invoice: invoice || null,
+//         subscription: subscription || null,
+//         firstDelivery,
+//         secondDelivery,
+//       },
+//     };
+
+//     return res.status(201).json(responseObject);
+//   } catch (err) {
+//     return next(err);
+//   }
+// };
+
 // READ ALL with pagination and filtering
+
+
 export const getOrders = async (
   req: Request,
   res: Response,
