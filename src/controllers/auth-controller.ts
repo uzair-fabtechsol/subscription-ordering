@@ -22,7 +22,7 @@ dotenv.config({ quiet: true });
 // DIVIDER Supplier functions
 
 //  this function sends an otp to email
-export const signupSupplier = async (
+const signupSupplier = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -74,7 +74,7 @@ export const signupSupplier = async (
   }
 };
 
-export const verifySupplierUsingOtp = async (
+const verifySupplierUsingOtp = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -159,7 +159,7 @@ export const verifySupplierUsingOtp = async (
 // DIVIDER Client functions
 
 //  this function sends an otp to email
-export const signupClient = async (
+const signupClient = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -205,7 +205,7 @@ export const signupClient = async (
   }
 };
 
-export const verifyClientUsingOtp = async (
+const verifyClientUsingOtp = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -289,11 +289,7 @@ export const verifyClientUsingOtp = async (
 
 // DIVIDER Admin functions
 
-export const adminSignin = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const adminSignin = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
 
@@ -349,7 +345,7 @@ export const adminSignin = async (
 
 // DIVIDER Google functions
 
-export const googleAuth = (req: Request, res: Response, next: NextFunction) => {
+const googleAuth = (req: Request, res: Response, next: NextFunction) => {
   // stash userType temporarily in the state param
   const userType = req.query.userType as string;
   const companyName = req.query.companyName as string;
@@ -367,7 +363,7 @@ export const googleAuth = (req: Request, res: Response, next: NextFunction) => {
   })(req, res, next);
 };
 
-export const sendJwtGoogle = (
+const sendJwtGoogle = (
   req: CustomRequest,
   res: Response,
   next: NextFunction
@@ -405,7 +401,7 @@ export const sendJwtGoogle = (
 
 // DIVIDER Common functions
 
-export const getCurrSupplierOrCLient = async (
+const getCurrSupplierOrCLient = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -456,7 +452,7 @@ export const getCurrSupplierOrCLient = async (
   }
 };
 
-export const signinSupplierOrClient = async (
+const signinSupplierOrClient = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -524,7 +520,7 @@ export const signinSupplierOrClient = async (
 };
 
 //  this sends the reset url to email
-export const forgotPassword = async (
+const forgotPassword = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -572,7 +568,7 @@ export const forgotPassword = async (
   }
 };
 
-export const resetPassword = async (
+const resetPassword = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -627,4 +623,18 @@ export const resetPassword = async (
   } catch (err) {
     next(err);
   }
+};
+
+export {
+  signupSupplier,
+  verifySupplierUsingOtp,
+  signupClient,
+  verifyClientUsingOtp,
+  adminSignin,
+  googleAuth,
+  sendJwtGoogle,
+  getCurrSupplierOrCLient,
+  signinSupplierOrClient,
+  forgotPassword,
+  resetPassword,
 };

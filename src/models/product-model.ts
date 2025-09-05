@@ -8,6 +8,11 @@ const productSchema = new Schema<IProduct>(
       required: [true, "Product name is required"],
       trim: true,
     },
+    supplierId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "Supplier id is required"],
+    },
     category: {
       type: Schema.Types.ObjectId,
       ref: "Category",
